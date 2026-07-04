@@ -36,6 +36,8 @@ cp .env.example .env    # puis changer le mot de passe
 docker compose up --build
 ```
 
+Perso je n'utilise pas Docker Desktop (trop lourd), juste Docker installé dans WSL. Dans ce cas il faut penser à démarrer le démon (`sudo service docker start`) et lancer la commande depuis WSL dans `/mnt/d/...`. Le `WATCHFILES_FORCE_POLLING` du compose est là pour que le rechargement auto marche quand même depuis un disque Windows.
+
 L'API tourne sur http://localhost:8000, la doc Swagger est sur http://localhost:8000/docs et `GET /health` indique si la base répond.
 
 ### Backend sans Docker (pour développer)

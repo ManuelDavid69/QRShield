@@ -52,12 +52,41 @@ pip install -r requirements-dev.txt
 uvicorn app.main:app --reload
 ```
 
+Les migrations Alembic sont appliquées automatiquement au démarrage du conteneur. Pour en créer une nouvelle après avoir modifié un modèle :
+
+```bash
+docker compose run --rm backend alembic revision --autogenerate -m "description"
+```
+
 ### Tests
 
 ```bash
 cd backend
 pytest
 ```
+
+Les tests dans `tests/integration/` tournent sur une vraie base PostGIS (une base `qrshield_test` créée à côté de la base normale), donc il faut que `docker compose up db` tourne. Sinon ils sont simplement ignorés.
+
+## API
+
+La doc complète est sur `/docs` (Swagger). Pour l'instant :
+
+| Méthode | Route | Rôle |
+|---|---|---|
+| POST | `/auth/register` | créer un compte |
+| POST | `/auth/login` | récupérer un token JWT |
+| GET | `/auth/me` | infos du compte connecté |
+| POST | `/scans` | enregistrer un QR code scanné (avec position GPS optionnelle) |
+| GET | `/scans` | historique paginé |
+| GET / DELETE | `/scans/{id}` | voir ou supprimer un scan |
+
+Le type de contenu (lien, Wi-Fi, email, téléphone, contact...) est détecté côté serveur. L'analyse de sécurité des liens arrive dans la phase suivante, d'ici là le verdict est `unknown`.
+
+### Modèle de données
+
+- `users` : les comptes.
+- `scans` : l'historique de chaque utilisateur, avec la position en `geography(Point)` PostGIS.
+- `url_analyses` : une ligne par URL, **partagée** entre tous les utilisateurs. Un scan pointe vers l'analyse de son URL au lieu de stocker son propre verdict. Comme ça si une URL est reclassée dangereuse plus tard, tous les scans concernés le voient directement et on sait qui prévenir.
 
 ## Organisation du code
 
@@ -80,7 +109,7 @@ dashboard/         dashboard web React (à venir)
 ## Avancement
 
 - [x] Setup du projet (Docker Compose, structure, config, route `/health`)
-- [ ] Modèles de données et migrations
+- [x] Modèles de données, migrations, comptes utilisateurs et historique des scans
 - [ ] Écran de scan sur mobile
 - [ ] Analyse de sécurité (Safe Browsing, VirusTotal, redirections, typosquatting)
 - [ ] Algorithme de scoring
@@ -94,3 +123,10 @@ dashboard/         dashboard web React (à venir)
 - Le conteneur de l'API ne tourne pas en root.
 - Postgres n'est exposé que sur `127.0.0.1`, pas sur tout le réseau.
 - En cas d'erreur de base de données, l'API ne renvoie jamais le message d'erreur brut au client (ça peut donner des infos sur l'infra).
+- Mots de passe hashés avec Argon2id (et re-hashés automatiquement à la connexion si les paramètres recommandés changent).
+- Tokens JWT signés en HS256 avec une clé d'au moins 32 caractères. L'algo accepté est fixé côté serveur, donc un token forgé avec `alg: none` est refusé (il y a un test pour ça).
+- Au login, le mot de passe est vérifié même quand l'email n'existe pas, contre un hash bidon. Sans ça, la réponse est plus rapide pour un email inconnu et on peut deviner quels comptes existent en mesurant le temps.
+- Les QR codes Wi-Fi contiennent le mot de passe du réseau en clair (`WIFI:S:MaBox;P:motdepasse;;`). Il est masqué avant d'être enregistré, il ne touche jamais la base.
+- Accéder au scan de quelqu'un d'autre renvoie 404 et pas 403, pour ne pas confirmer que l'id existe.
+
+Ce qui manque encore et que je compte ajouter : refresh tokens, limitation du nombre de tentatives de connexion (rate limiting).

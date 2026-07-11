@@ -20,7 +20,7 @@ services:
     env_file: .env
     environment:
       DATABASE_URL: "postgresql+psycopg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}"
-      # le projet est sur /mnt/d (WSL), les events inotify ne passent pas donc on force le polling
+      # projet sur /mnt/d (WSL) : les événements inotify ne remontent pas, on force donc le polling
       WATCHFILES_FORCE_POLLING: "true"
     ports:
       - "8000:8000"

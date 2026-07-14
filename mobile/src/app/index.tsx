@@ -8,6 +8,7 @@ import { CameraView, useCameraPermissions, type BarcodeScanningResult } from "ex
 import PermissionRequest from "@/components/PermissionRequest";
 import ScanFrame from "@/components/ScanFrame";
 import { colors } from "@/constants/colors";
+import { getQrPayload } from "@/utils/scanResult";
 
 export default function ScanScreen() {
   const [permission, requestPermission] = useCameraPermissions();
@@ -28,7 +29,7 @@ export default function ScanScreen() {
   const handleScan = useCallback((result: BarcodeScanningResult) => {
     if (locked.current) return;
     locked.current = true;
-    router.push({ pathname: "/result", params: { data: result.data } });
+    router.push({ pathname: "/result", params: { data: getQrPayload(result) } });
   }, []);
 
   if (permission === null) {

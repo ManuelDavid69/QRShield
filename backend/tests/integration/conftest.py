@@ -8,6 +8,8 @@ from sqlalchemy.orm import sessionmaker
 from app.config import get_settings
 from app.database import Base, get_db
 from app.main import app
+from app.services.analysis.safe_fetch import FetchResult, Hop
+from app.services.qr_analyzer import UrlAnalyzer, get_url_analyzer
 import app.models as _models  # noqa: F401  # enregistre les tables (alias sinon "app" écrase l'appli FastAPI)
 
 TEST_DATABASE = "qrshield_test"
@@ -49,8 +51,24 @@ def db_session_factory(test_engine):
     return sessionmaker(bind=test_engine, autoflush=False)
 
 
+class OfflineFetcher:
+    """Remplace le suivi de redirections : aucune requête réseau pendant les tests."""
+
+    def __init__(self) -> None:
+        self.calls: list[str] = []
+
+    def fetch(self, url: str) -> FetchResult:
+        self.calls.append(url)
+        return FetchResult(chain=[Hop(url=url, status=200)], final_url=url, content_type="text/html")
+
+
 @pytest.fixture
-def api(test_engine, db_session_factory):
+def offline_fetcher() -> OfflineFetcher:
+    return OfflineFetcher()
+
+
+@pytest.fixture
+def api(test_engine, db_session_factory, offline_fetcher):
     def _get_db():
         db = db_session_factory()
         try:
@@ -59,6 +77,8 @@ def api(test_engine, db_session_factory):
             db.close()
 
     app.dependency_overrides[get_db] = _get_db
+    # vrai pipeline d'analyse (heuristiques + scoring), sans services externes
+    app.dependency_overrides[get_url_analyzer] = lambda: UrlAnalyzer(fetcher=offline_fetcher)
     with TestClient(app) as client:
         yield client
     app.dependency_overrides.clear()

@@ -20,6 +20,22 @@ class ScanCreate(BaseModel):
         return self
 
 
+class ReasonOut(BaseModel):
+    code: str
+    severity: str
+    message: str
+
+
+class AnalysisOut(BaseModel):
+    final_url: str | None
+    domain: str | None
+    score: int | None
+    verdict: Verdict
+    reasons: list[ReasonOut]
+    redirect_chain: list[str]
+    analyzed_at: datetime | None
+
+
 class ScanOut(BaseModel):
     id: uuid.UUID
     content: str
@@ -29,6 +45,7 @@ class ScanOut(BaseModel):
     latitude: float | None
     longitude: float | None
     scanned_at: datetime
+    analysis: AnalysisOut | None
 
 
 class ScanList(BaseModel):
@@ -46,6 +63,19 @@ def scan_to_out(scan: Scan) -> ScanOut:
         latitude = point.y
         longitude = point.x
 
+    analysis = None
+    if scan.analysis is not None:
+        a = scan.analysis
+        analysis = AnalysisOut(
+            final_url=a.final_url,
+            domain=a.domain,
+            score=a.score,
+            verdict=a.verdict,
+            reasons=[ReasonOut(**r) for r in a.reasons],
+            redirect_chain=[hop["url"] for hop in a.details.get("redirect_chain", [])],
+            analyzed_at=a.analyzed_at,
+        )
+
     return ScanOut(
         id=scan.id,
         content=scan.content,
@@ -55,4 +85,5 @@ def scan_to_out(scan: Scan) -> ScanOut:
         latitude=latitude,
         longitude=longitude,
         scanned_at=scan.scanned_at,
+        analysis=analysis,
     )

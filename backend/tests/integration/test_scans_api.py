@@ -13,8 +13,30 @@ def test_create_url_scan(api, auth_headers):
     assert r.status_code == 201
     body = r.json()
     assert body["content_type"] == "url"
-    assert body["verdict"] == "unknown"
+    assert body["verdict"] == "safe"
     assert body["url"] == "https://exemple.fr/menu"
+    assert body["analysis"]["score"] == 0
+    assert body["analysis"]["redirect_chain"] == ["https://exemple.fr/menu"]
+
+
+def test_phishing_url_is_flagged_with_reasons(api, auth_headers):
+    r = _create(api, auth_headers(), "https://paypa1-securite.top/login")
+    assert r.status_code == 201
+    analysis = r.json()["analysis"]
+    assert r.json()["verdict"] in ("suspicious", "dangerous")
+    codes = {reason["code"] for reason in analysis["reasons"]}
+    assert "suspicious_tld" in codes
+    assert analysis["domain"] == "paypa1-securite.top"
+    assert all(reason["message"] for reason in analysis["reasons"])
+
+
+def test_analysis_is_reused_for_the_same_url(api, auth_headers, offline_fetcher):
+    alice = auth_headers()
+    bob = auth_headers(email="bob@test.fr")
+    _create(api, alice, "https://menu-resto.fr/carte")
+    _create(api, bob, "https://menu-resto.fr/carte")
+    # une seule analyse réseau pour deux scans de la même URL (cache de 24 h)
+    assert offline_fetcher.calls == ["https://menu-resto.fr/carte"]
 
 
 def test_same_url_shares_one_analysis(api, auth_headers, db_session_factory):

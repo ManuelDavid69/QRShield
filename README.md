@@ -72,6 +72,15 @@ npx expo start
 
 Il suffit ensuite de scanner le QR code affiché dans le terminal avec l'application **Expo Go** (Android ou iOS). Le téléphone et l'ordinateur doivent être sur le même réseau Wi-Fi.
 
+L'application a besoin de joindre l'API. Avec Docker dans WSL2, l'API répond sur le `localhost` de Windows mais pas sur son adresse réseau, car WSL2 possède son propre réseau virtuel. Un petit relais Node rend donc l'API accessible au téléphone pendant le développement. Il se lance dans un second terminal :
+
+```bash
+cd mobile
+npm run api-proxy
+```
+
+L'application déduit l'adresse du PC de celle du serveur Expo et contacte l'API sur le port 8001. Pour viser une autre adresse, il suffit de définir `EXPO_PUBLIC_API_URL`.
+
 ## Tests
 
 ```bash
@@ -153,12 +162,16 @@ Un scan ne stocke pas son propre verdict : il pointe vers l'analyse de son URL. 
 
 ## Application mobile
 
-L'application s'ouvre directement sur la caméra. Une fois le QR code lu, l'écran de résultat affiche le type de contenu et, pour un lien, **le nom de domaine réel en gros caractères**. C'est l'information la plus utile pour repérer une arnaque, et elle n'est pas toujours évidente à lire dans l'URL brute :
+Après la connexion, l'application s'ouvre directement sur la caméra. Une fois le QR code lu, il est envoyé au serveur et l'écran de résultat affiche le verdict avec un code couleur, le score, les raisons en clair et la chaîne de redirections. Le domaine de destination apparaît **en gros caractères**, car c'est l'information la plus utile pour repérer une arnaque et elle n'est pas toujours évidente à lire dans l'URL brute :
 
 - `https://www.paypal.com@evil.com/login` mène en réalité vers `evil.com` : tout ce qui précède le `@` est ignoré par le navigateur.
 - `https://аpple.com`, écrit avec un « а » cyrillique, s'affiche `xn--pple-43d.com`, ce qui rend l'imitation visible.
 
-Le lien n'est jamais ouvert automatiquement : il faut appuyer sur « Ouvrir le lien » puis confirmer. Seuls les liens `http` et `https` peuvent être ouverts, ce qui exclut des schémas comme `javascript:` ou `intent:`. Pour un QR code Wi-Fi, l'application affiche le nom du réseau et le type de sécurité, mais jamais le mot de passe.
+Le lien n'est jamais ouvert automatiquement. Le bouton n'apparaît qu'une fois l'analyse terminée, et une confirmation est demandée. Si le lien est suspect ou dangereux, ce bouton passe au second plan et devient « Ouvrir quand même » : la décision reste à l'utilisateur, mais le choix par défaut est de ne pas ouvrir. C'est l'URL finale qui est ouverte, c'est-à-dire celle qui a été analysée, car le lien de départ pourrait rediriger ailleurs au second passage. Seuls les liens `http` et `https` peuvent être ouverts, ce qui exclut des schémas comme `javascript:` ou `intent:`.
+
+Pour un QR code Wi-Fi, l'application affiche le nom du réseau et le type de sécurité, mais jamais le mot de passe. Celui-ci est retiré avant l'envoi au serveur : il ne quitte pas le téléphone.
+
+Sur Android, `expo-camera` renvoie dans le champ `data` une version reformatée du contenu : pour un QR code Wi-Fi, il s'agit du nom du réseau suivi du mot de passe, sans le préfixe `WIFI:`. Le type n'était donc plus reconnu et le mot de passe s'affichait en clair. J'ai découvert ce problème en testant sur un vrai téléphone, car les tests unitaires utilisaient directement le contenu brut. L'application lit désormais le champ `raw`, et un test reproduit ce cas.
 
 ## Sécurité
 
@@ -171,7 +184,9 @@ Le lien n'est jamais ouvert automatiquement : il faut appuyer sur « Ouvrir le l
 - Les QR codes Wi-Fi contiennent le mot de passe du réseau en clair (`WIFI:S:MaBox;P:motdepasse;;`). Il est masqué avant l'enregistrement et n'est jamais stocké en base.
 - Demander le scan d'un autre utilisateur renvoie une erreur 404 et non 403, afin de ne pas confirmer que l'identifiant existe.
 
-Il reste à ajouter les refresh tokens et une limitation du nombre de tentatives de connexion.
+- Sur le téléphone, le token JWT est conservé avec `expo-secure-store`, qui s'appuie sur le Keystore Android et le Keychain iOS. AsyncStorage l'aurait stocké en clair.
+
+Il reste à ajouter les refresh tokens (pour l'instant, il faut se reconnecter au bout d'une heure) et une limitation du nombre de tentatives de connexion. En développement, l'application communique avec l'API en HTTP sur le réseau local ; un déploiement réel devra passer en HTTPS.
 
 ## Organisation du code
 
@@ -192,6 +207,8 @@ mobile/
   src/
     app/           écrans (expo-router : un fichier = une route)
     components/    composants réutilisables
+    hooks/         connexion, envoi et analyse d'un scan
+    services/      appels à l'API, stockage sécurisé du token
     utils/         lecture du contenu des QR codes
 web/               page web publique React (à venir)
 ```
@@ -203,7 +220,7 @@ web/               page web publique React (à venir)
 - [x] Écran de scan sur mobile et affichage du contenu
 - [x] Analyse de sécurité côté serveur (redirections, typosquatting, Safe Browsing, VirusTotal, âge du domaine)
 - [x] Algorithme de scoring
-- [ ] Affichage du résultat de l'analyse dans l'application (connexion au backend)
+- [x] Comptes utilisateurs et affichage du résultat de l'analyse dans l'application
 - [ ] Historique et statistiques personnelles dans l'application
 - [ ] Carte communautaire (application et page web publique)
 - [ ] Notifications

@@ -1,4 +1,4 @@
-import { isOpenableUrl, parseQrContent } from "../qrContent";
+import { isOpenableUrl, parseQrContent, sanitizeForUpload } from "../qrContent";
 
 describe("parseQrContent", () => {
   it("détecte un lien web", () => {
@@ -99,5 +99,20 @@ describe("hôte affiché", () => {
     // "аpple.com" avec un a cyrillique
     const result = parseQrContent("https://аpple.com");
     expect(result.host).toBe("xn--pple-43d.com");
+  });
+});
+
+describe("sanitizeForUpload", () => {
+  it("retire le mot de passe Wi-Fi avant l'envoi au serveur", () => {
+    const parsed = parseQrContent("WIFI:T:WPA;S:MaBox;P:sec\\;ret;;");
+    expect(sanitizeForUpload(parsed)).toBe("WIFI:T:WPA;S:MaBox;P:***;;");
+  });
+
+  it("masque aussi quand le mot de passe est le premier champ", () => {
+    expect(sanitizeForUpload(parseQrContent("WIFI:P:secret;S:MaBox;;"))).toBe("WIFI:P:***;S:MaBox;;");
+  });
+
+  it("ne touche pas aux autres contenus", () => {
+    expect(sanitizeForUpload(parseQrContent("https://exemple.fr/P:1"))).toBe("https://exemple.fr/P:1");
   });
 });

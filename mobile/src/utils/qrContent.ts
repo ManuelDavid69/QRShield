@@ -148,6 +148,14 @@ export function parseQrContent(raw: string): ParsedQr {
   return { type: "text", raw: text };
 }
 
+// Champ P: du format WIFI:, jusqu'au ; non échappé
+const WIFI_PASSWORD_RE = /([:;]P:)(?:[^;\\]|\\.)*/gi;
+
+export function sanitizeForUpload(parsed: ParsedQr): string {
+  // Le serveur masque aussi le mot de passe, mais il n'a aucune raison de quitter le téléphone
+  return parsed.type === "wifi" ? parsed.raw.replace(WIFI_PASSWORD_RE, "$1***") : parsed.raw;
+}
+
 export const typeLabels: Record<QrContentType, string> = {
   url: "Lien web",
   wifi: "Réseau Wi-Fi",

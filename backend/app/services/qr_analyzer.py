@@ -23,6 +23,13 @@ logger = logging.getLogger(__name__)
 NEW_DOMAIN_DAYS = 30
 RECENT_DOMAIN_DAYS = 90
 
+THREAT_LABELS = {
+    "MALWARE": "logiciel malveillant",
+    "SOCIAL_ENGINEERING": "hameçonnage",
+    "UNWANTED_SOFTWARE": "logiciel indésirable",
+    "POTENTIALLY_HARMFUL_APPLICATION": "application potentiellement dangereuse",
+}
+
 
 @dataclass
 class AnalysisOutcome:
@@ -145,11 +152,11 @@ class UrlAnalyzer:
             return [], "erreur"
         if not threats:
             return [], {"threats": []}
+        labels = ", ".join(THREAT_LABELS.get(threat, threat) for threat in threats)
         return [Signal(
             "safe_browsing",
             Severity.CRITICAL,
-            "Ce lien est référencé comme dangereux par Google Safe Browsing "
-            f"({', '.join(threats)}).",
+            f"Ce lien est référencé comme dangereux par Google Safe Browsing ({labels}).",
         )], {"threats": threats}
 
     def _check_virustotal(self, url: str) -> tuple[list[Signal], Any]:

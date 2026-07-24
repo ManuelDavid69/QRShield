@@ -1,0 +1,103 @@
+import Constants from "expo-constants";
+
+export type Verdict = "unknown" | "safe" | "suspicious" | "dangerous";
+export type Severity = "info" | "low" | "medium" | "high" | "critical";
+
+export interface Reason {
+  code: string;
+  severity: Severity;
+  message: string;
+}
+
+export interface Analysis {
+  final_url: string | null;
+  domain: string | null;
+  score: number | null;
+  verdict: Verdict;
+  reasons: Reason[];
+  redirect_chain: string[];
+  analyzed_at: string | null;
+}
+
+export interface Scan {
+  id: string;
+  content: string;
+  content_type: string;
+  url: string | null;
+  verdict: Verdict;
+  latitude: number | null;
+  longitude: number | null;
+  scanned_at: string;
+  analysis: Analysis | null;
+}
+
+export class ApiError extends Error {
+  // status = 0 : le serveur n'a pas pu être joint
+  constructor(
+    readonly status: number,
+    message: string,
+  ) {
+    super(message);
+  }
+}
+
+// L'analyse suit des redirections et interroge plusieurs services, elle peut prendre 15 s
+const TIMEOUT_MS = 35_000;
+
+function apiBaseUrl(): string {
+  const fromEnv = process.env.EXPO_PUBLIC_API_URL;
+  if (fromEnv) return fromEnv.replace(/\/$/, "");
+  // Expo Go connaît l'adresse du PC : c'est celle du serveur de dev (ex. 192.168.1.13:8081)
+  const host = Constants.expoConfig?.hostUri?.split(":")[0] ?? "127.0.0.1";
+  return `http://${host}:8001`;
+}
+
+function errorMessage(status: number, body: unknown): string {
+  if (status === 422) return "Vérifiez les informations saisies.";
+  const detail = (body as { detail?: unknown } | null)?.detail;
+  return typeof detail === "string" ? detail : "Le serveur a renvoyé une erreur.";
+}
+
+async function request<T>(path: string, init: RequestInit): Promise<T> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
+  let response: Response;
+  try {
+    response = await fetch(`${apiBaseUrl()}${path}`, { ...init, signal: controller.signal });
+  } catch {
+    throw new ApiError(0, "Impossible de joindre le serveur QRShield.");
+  } finally {
+    clearTimeout(timer);
+  }
+
+  const body: unknown = await response.json().catch(() => null);
+  if (!response.ok) throw new ApiError(response.status, errorMessage(response.status, body));
+  return body as T;
+}
+
+export async function login(email: string, password: string): Promise<string> {
+  // OAuth2 impose un formulaire urlencoded, pas du JSON
+  const form = new URLSearchParams({ username: email, password }).toString();
+  const { access_token } = await request<{ access_token: string }>("/auth/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: form,
+  });
+  return access_token;
+}
+
+export async function register(email: string, password: string): Promise<void> {
+  await request("/auth/register", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, password }),
+  });
+}
+
+export function createScan(token: string, content: string): Promise<Scan> {
+  return request<Scan>("/scans", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ content }),
+  });
+}

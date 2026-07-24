@@ -1,8 +1,17 @@
 import { Stack } from "expo-router";
+import { View } from "react-native";
 
 import { colors } from "@/constants/colors";
+import { AuthProvider, useAuth } from "@/hooks/useAuth";
 
-export default function RootLayout() {
+function Navigator() {
+  const { token, ready } = useAuth();
+
+  if (!ready) {
+    return <View style={{ flex: 1, backgroundColor: colors.scannerBackground }} />;
+  }
+
+  const signedIn = token !== null;
   return (
     <Stack
       screenOptions={{
@@ -13,8 +22,22 @@ export default function RootLayout() {
         contentStyle: { backgroundColor: colors.background },
       }}
     >
-      <Stack.Screen name="index" options={{ headerShown: false }} />
-      <Stack.Screen name="result" options={{ title: "Résultat du scan", presentation: "card" }} />
+      <Stack.Protected guard={signedIn}>
+        <Stack.Screen name="index" options={{ headerShown: false }} />
+        <Stack.Screen name="result" options={{ title: "Résultat du scan", presentation: "card" }} />
+      </Stack.Protected>
+      <Stack.Protected guard={!signedIn}>
+        <Stack.Screen name="login" options={{ headerShown: false }} />
+        <Stack.Screen name="register" options={{ headerShown: false }} />
+      </Stack.Protected>
     </Stack>
+  );
+}
+
+export default function RootLayout() {
+  return (
+    <AuthProvider>
+      <Navigator />
+    </AuthProvider>
   );
 }

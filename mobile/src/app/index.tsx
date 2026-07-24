@@ -8,10 +8,12 @@ import { CameraView, useCameraPermissions, type BarcodeScanningResult } from "ex
 import PermissionRequest from "@/components/PermissionRequest";
 import ScanFrame from "@/components/ScanFrame";
 import { colors } from "@/constants/colors";
+import { useAuth } from "@/hooks/useAuth";
 import { getQrPayload } from "@/utils/scanResult";
 
 export default function ScanScreen() {
   const [permission, requestPermission] = useCameraPermissions();
+  const { signOut } = useAuth();
   const [torch, setTorch] = useState(false);
   const isFocused = useIsFocused();
   // La caméra émet plusieurs détections par seconde pour un même code.
@@ -54,6 +56,9 @@ export default function ScanScreen() {
       <ScanFrame />
       <SafeAreaView style={styles.overlay}>
         <Text style={styles.title}>QRShield</Text>
+        <Pressable style={styles.signOut} onPress={() => void signOut()}>
+          <Text style={styles.signOutLabel}>Déconnexion</Text>
+        </Pressable>
         <Pressable
           style={[styles.torchButton, torch ? styles.torchButtonOn : null]}
           onPress={() => setTorch((previous) => !previous)}
@@ -87,6 +92,17 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     letterSpacing: 0.5,
     marginTop: 12,
+  },
+  signOut: {
+    position: "absolute",
+    top: 52,
+    left: 16,
+    padding: 6,
+  },
+  signOutLabel: {
+    color: "#FFFFFF",
+    fontSize: 13,
+    fontWeight: "600",
   },
   torchButton: {
     width: 76,

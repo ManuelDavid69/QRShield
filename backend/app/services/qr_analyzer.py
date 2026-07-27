@@ -214,6 +214,7 @@ class UrlAnalyzer:
         fetch = self._fetcher.fetch(url)
         final_url = fetch.final_url or url
         domain = _registered_domain(final_url)
+        registry_domain = split_domain(domain).registry_domain if domain and not is_ip_literal(domain) else None
 
         signals = url_signals(url)
         if final_url != url:
@@ -225,7 +226,7 @@ class UrlAnalyzer:
         with ThreadPoolExecutor(max_workers=3) as pool:
             sb = pool.submit(self._check_safe_browsing, list(dict.fromkeys([url, final_url])))
             vt = pool.submit(self._check_virustotal, final_url)
-            age = pool.submit(self._check_domain_age, domain)
+            age = pool.submit(self._check_domain_age, registry_domain)
             sb_signals, sb_detail = sb.result()
             vt_signals, vt_detail = vt.result()
             age_signals, age_days = age.result()

@@ -19,7 +19,9 @@ from app.services.analysis.brands import (
 from app.services.analysis.signals import Severity, Signal
 
 # Liste des suffixes publics embarquée dans la lib : pas de téléchargement au démarrage
-_extract = tldextract.TLDExtract(cache_dir=None, suffix_list_urls=())
+# Les suffixes privés comptent aussi : sur appspot.com ou github.io, chaque sous-domaine
+# est un site indépendant, souvent loué pour héberger une page de phishing
+_extract = tldextract.TLDExtract(cache_dir=None, suffix_list_urls=(), include_psl_private_domains=True)
 
 # Caractères qu'on remplace pour imiter une lettre (paypa1, amaz0n, rnicrosoft...)
 _HOMOGLYPHS = str.maketrans({"0": "o", "1": "l", "3": "e", "4": "a", "5": "s", "7": "t", "8": "b", "!": "i", "|": "l"})
@@ -31,16 +33,28 @@ class DomainParts:
     subdomain: str
     label: str
     suffix: str
+    registry_domain: str
 
     @property
     def registered(self) -> str:
-        """Le domaine réellement acheté par le propriétaire du site (ex. secure-login.ru)."""
-        return f"{self.label}.{self.suffix}" if self.suffix else self.host
+        """Le site réellement visité (ex. secure-login.ru ou mon-site.github.io)."""
+        return f"{self.label}.{self.suffix}" if self.label and self.suffix else self.host
+
+    @property
+    def is_official(self) -> bool:
+        return any(self.host == d or self.host.endswith(f".{d}") for d in OFFICIAL_DOMAINS)
 
 
 def split_domain(host: str) -> DomainParts:
     parts = _extract(host.lower().rstrip("."))
-    return DomainParts(host=host.lower(), subdomain=parts.subdomain, label=parts.domain, suffix=parts.suffix)
+    return DomainParts(
+        host=host.lower().rstrip("."),
+        subdomain=parts.subdomain,
+        label=parts.domain,
+        suffix=parts.suffix,
+        # Le domaine acheté chez le registre : c'est lui qui a une date de création RDAP
+        registry_domain=parts.top_domain_under_registry_suffix or host.lower().rstrip("."),
+    )
 
 
 def is_ip_literal(host: str) -> bool:
@@ -151,7 +165,7 @@ def brand_signals(host: str) -> list[Signal]:
     if not host or is_ip_literal(host):
         return []
     parts = split_domain(host)
-    if parts.registered in OFFICIAL_DOMAINS:
+    if parts.is_official:
         return []
     for brand in BRANDS:
         signal = _match_brand(brand, parts)
@@ -191,7 +205,7 @@ def url_signals(url: str) -> list[Signal]:
         ))
     elif host:
         parts = split_domain(host)
-        if "xn--" in host and parts.registered not in OFFICIAL_DOMAINS:
+        if "xn--" in host and not parts.is_official:
             try:
                 readable = host.encode("ascii").decode("idna")
             except UnicodeError:

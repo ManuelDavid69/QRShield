@@ -96,3 +96,21 @@ def test_split_domain(host: str, expected: str) -> None:
 )
 def test_file_extension(path: str, expected: str) -> None:
     assert file_extension(path) == expected
+
+
+def test_hebergeur_partage_le_vrai_site_est_le_sous_domaine() -> None:
+    parts = split_domain("testsafebrowsing.appspot.com")
+    assert parts.registered == "testsafebrowsing.appspot.com"
+    assert parts.registry_domain == "appspot.com"
+
+
+@pytest.mark.parametrize(
+    "url",
+    ["https://paypal-login.web.app", "https://paypal.github.io/compte", "https://impots-gouv.vercel.app"],
+)
+def test_marque_imitee_sur_un_hebergeur_gratuit(url: str) -> None:
+    assert "brand_impersonation" in codes(url)
+
+
+def test_domaine_reserve_a_un_hebergeur_sans_nom_de_site() -> None:
+    assert split_domain("s3.amazonaws.com").registered == "s3.amazonaws.com"

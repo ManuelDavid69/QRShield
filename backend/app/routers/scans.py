@@ -7,10 +7,10 @@ from sqlalchemy.orm import Session
 
 from app.config import get_settings
 from app.database import get_db
-from app.models import Scan, User
+from app.models import Scan, UrlAnalysis, User, Verdict
 from app.schemas.scan import ScanCreate, ScanList, ScanOut, scan_to_out
 from app.security.dependencies import get_current_user
-from app.services.content_parser import parse_qr_content
+from app.services.content_parser import categorize, parse_qr_content
 from app.services.qr_analyzer import UrlAnalyzer, get_url_analyzer
 from app.services.url_analyses import get_or_create_analysis, refresh_analysis
 
@@ -39,6 +39,7 @@ def create_scan(
         # On stocke la version assainie : les mots de passe Wi-Fi ne doivent jamais toucher la base
         content=parsed.sanitized,
         content_type=parsed.content_type,
+        category=categorize(parsed),
         url=parsed.url,
     )
     if parsed.url is not None:
@@ -58,16 +59,19 @@ def create_scan(
 def list_scans(
     limit: int = Query(20, ge=1, le=100),
     offset: int = Query(0, ge=0),
+    verdict: Verdict | None = None,
     db: Session = Depends(get_db),
     current: User = Depends(get_current_user),
 ) -> ScanList:
-    total = (
-        db.scalar(select(func.count()).select_from(Scan).where(Scan.user_id == current.id)) or 0
-    )
+    conditions = [Scan.user_id == current.id]
+    if verdict is not None:
+        conditions.append(Scan.analysis.has(UrlAnalysis.verdict == verdict))
+
+    total = db.scalar(select(func.count()).select_from(Scan).where(*conditions)) or 0
     scans = (
         db.scalars(
             select(Scan)
-            .where(Scan.user_id == current.id)
+            .where(*conditions)
             .order_by(Scan.scanned_at.desc(), Scan.id)
             .limit(limit)
             .offset(offset)

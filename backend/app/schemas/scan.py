@@ -4,7 +4,7 @@ from datetime import datetime
 from geoalchemy2.shape import to_shape
 from pydantic import BaseModel, Field, model_validator
 
-from app.models.enums import ContentType, Verdict
+from app.models.enums import ContentType, ScanCategory, Verdict
 from app.models.scan import Scan
 
 
@@ -40,6 +40,7 @@ class ScanOut(BaseModel):
     id: uuid.UUID
     content: str
     content_type: ContentType
+    category: ScanCategory
     url: str | None
     verdict: Verdict
     latitude: float | None
@@ -80,6 +81,7 @@ def scan_to_out(scan: Scan) -> ScanOut:
         id=scan.id,
         content=scan.content,
         content_type=scan.content_type,
+        category=scan.category,
         url=scan.url,
         verdict=scan.verdict,
         latitude=latitude,

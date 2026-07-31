@@ -7,7 +7,7 @@ from sqlalchemy import DateTime, Enum, ForeignKey, Index, Text, Uuid, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
-from app.models.enums import ContentType, Verdict
+from app.models.enums import ContentType, ScanCategory, Verdict
 
 if TYPE_CHECKING:
     from app.models.url_analysis import UrlAnalysis
@@ -31,6 +31,12 @@ class Scan(Base):
     content_type: Mapped[ContentType] = mapped_column(
         Enum(ContentType, native_enum=False, length=20, values_callable=lambda e: [m.value for m in e]),
         nullable=False,
+    )
+    category: Mapped[ScanCategory] = mapped_column(
+        Enum(ScanCategory, native_enum=False, length=20, values_callable=lambda e: [m.value for m in e]),
+        nullable=False,
+        default=ScanCategory.OTHER,
+        server_default=ScanCategory.OTHER.value,
     )
     url: Mapped[str | None] = mapped_column(Text, nullable=True)
     analysis_id: Mapped[uuid.UUID | None] = mapped_column(

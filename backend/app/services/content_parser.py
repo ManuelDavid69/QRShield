@@ -1,7 +1,8 @@
 import re
 from dataclasses import dataclass
+from urllib.parse import urlsplit
 
-from app.models.enums import ContentType
+from app.models.enums import ContentType, ScanCategory
 
 
 @dataclass(frozen=True)
@@ -17,6 +18,31 @@ _BARE_URL_RE = re.compile(r"^(?:[a-z0-9-]+\.)+[a-z]{2,}(?::\d{1,5})?(?:[/?#]\S*)
 
 # Champ P: du format WIFI:, jusqu'au ; non échappé qui termine la valeur.
 _WIFI_PASSWORD_RE = re.compile(r"(?<=[:;])(P:)((?:[^;\\]|\\.)*)", re.IGNORECASE)
+
+
+# Mots entiers uniquement : "pay" ne doit pas capturer "paysage", ni "menu" capturer "menuiserie"
+_MENU_WORDS = {"menu", "menus", "carte", "restaurant", "resto", "brasserie", "pizzeria"}
+_PAYMENT_WORDS = {"pay", "paiement", "payment", "payer", "checkout", "horodateur", "stationnement", "parking"}
+_PAYMENT_SERVICES = ("paypal", "stripe", "sumup", "lydia", "paybyphone", "flowbird", "easypark")
+
+
+def categorize(parsed: ParsedContent) -> ScanCategory:
+    if parsed.content_type is ContentType.WIFI:
+        return ScanCategory.WIFI
+    if parsed.url is None:
+        return ScanCategory.OTHER
+
+    try:
+        parts = urlsplit(parsed.url)
+        target = f"{parts.hostname or ''} {parts.path}".lower()
+    except ValueError:
+        return ScanCategory.WEBSITE
+    words = set(re.split(r"[^a-z]+", target))
+    if words & _PAYMENT_WORDS or any(service in target for service in _PAYMENT_SERVICES):
+        return ScanCategory.PAYMENT
+    if words & _MENU_WORDS:
+        return ScanCategory.MENU
+    return ScanCategory.WEBSITE
 
 
 def _mask_wifi_password(raw: str) -> str:

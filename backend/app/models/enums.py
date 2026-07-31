@@ -17,3 +17,11 @@ class Verdict(str, enum.Enum):
     SAFE = "safe"
     SUSPICIOUS = "suspicious"
     DANGEROUS = "dangerous"
+
+
+class ScanCategory(str, enum.Enum):
+    WEBSITE = "website"
+    MENU = "menu"
+    PAYMENT = "payment"
+    WIFI = "wifi"
+    OTHER = "other"

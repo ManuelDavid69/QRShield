@@ -106,8 +106,9 @@ La documentation complète est disponible sur `/docs`. Routes actuelles :
 | POST | `/auth/login` | Obtenir un token JWT |
 | GET | `/auth/me` | Informations du compte connecté |
 | POST | `/scans` | Enregistrer un QR code scanné, avec une position GPS facultative |
-| GET | `/scans` | Historique paginé |
+| GET | `/scans` | Historique paginé, avec un filtre facultatif sur le verdict |
 | GET / DELETE | `/scans/{id}` | Consulter ou supprimer un scan |
+| GET | `/stats/me` | Statistiques personnelles |
 
 Le type de contenu (lien, Wi-Fi, e-mail, téléphone, contact...) est détecté par le serveur. Pour un lien, la réponse de `POST /scans` contient aussi le résultat de l'analyse de sécurité : verdict, score, URL finale, chaîne de redirections et liste des raisons.
 
@@ -160,9 +161,17 @@ Suivre des liens choisis par n'importe qui présente un risque pour le serveur l
 
 Un scan ne stocke pas son propre verdict : il pointe vers l'analyse de son URL. Ainsi, si une URL est reclassée comme dangereuse plus tard, tous les scans concernés en tiennent compte immédiatement et il est facile de retrouver les utilisateurs à prévenir.
 
+## Statistiques
+
+Les statistiques sont calculées directement par PostgreSQL : nombre de scans par semaine, part de QR codes à risque, répartition des verdicts, sites les plus scannés et lieux habituels. Chaque scan reçoit aussi une catégorie (site web, menu, paiement, Wi-Fi ou autre), déduite de mots-clés dans l'adresse. La comparaison se fait sur des mots entiers, pour que `paysage-lyon.fr` ne soit pas pris pour un paiement ni `menuiserie-dupont.fr` pour un menu de restaurant.
+
+Les lieux sont regroupés avec `ST_ClusterDBSCAN`, une fonction de PostGIS qui rassemble les points proches sans fixer à l'avance le nombre de groupes. Plusieurs scans dans le même quartier forment ainsi un seul lieu, ce que ne permettrait pas un simple arrondi des coordonnées : deux points voisins situés de part et d'autre d'une limite d'arrondi seraient séparés.
+
+La position est facultative et n'est demandée qu'au premier scan. L'application l'arrondit à environ 100 mètres avant de l'envoyer, car une position précise n'apporte rien à ces statistiques et révélerait l'adresse de l'utilisateur. Le nom des lieux est résolu sur le téléphone : le serveur n'a besoin que des coordonnées arrondies.
+
 ## Application mobile
 
-Après la connexion, l'application s'ouvre directement sur la caméra. Une fois le QR code lu, il est envoyé au serveur et l'écran de résultat affiche le verdict avec un code couleur, le score, les raisons en clair et la chaîne de redirections. Le domaine de destination apparaît **en gros caractères**, car c'est l'information la plus utile pour repérer une arnaque et elle n'est pas toujours évidente à lire dans l'URL brute :
+L'application comporte trois onglets : le scanner, l'historique, filtrable par verdict, et les statistiques. Après la connexion, elle s'ouvre directement sur la caméra. Une fois le QR code lu, il est envoyé au serveur et l'écran de résultat affiche le verdict avec un code couleur, le score, les raisons en clair et la chaîne de redirections. Le domaine de destination apparaît **en gros caractères**, car c'est l'information la plus utile pour repérer une arnaque et elle n'est pas toujours évidente à lire dans l'URL brute :
 
 - `https://www.paypal.com@evil.com/login` mène en réalité vers `evil.com` : tout ce qui précède le `@` est ignoré par le navigateur.
 - `https://аpple.com`, écrit avec un « а » cyrillique, s'affiche `xn--pple-43d.com`, ce qui rend l'imitation visible.
@@ -208,8 +217,8 @@ mobile/
     app/           écrans (expo-router : un fichier = une route)
     components/    composants réutilisables
     hooks/         connexion, envoi et analyse d'un scan
-    services/      appels à l'API, stockage sécurisé du token
-    utils/         lecture du contenu des QR codes
+    services/      appels à l'API, stockage sécurisé du token, position
+    utils/         lecture du contenu des QR codes, libellés
 web/               page web publique React (à venir)
 ```
 
@@ -221,6 +230,6 @@ web/               page web publique React (à venir)
 - [x] Analyse de sécurité côté serveur (redirections, typosquatting, Safe Browsing, VirusTotal, âge du domaine)
 - [x] Algorithme de scoring
 - [x] Comptes utilisateurs et affichage du résultat de l'analyse dans l'application
-- [ ] Historique et statistiques personnelles dans l'application
+- [x] Historique et statistiques personnelles dans l'application
 - [ ] Carte communautaire (application et page web publique)
 - [ ] Notifications

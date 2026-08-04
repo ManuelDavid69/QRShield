@@ -2,6 +2,7 @@ import Constants from "expo-constants";
 
 export type Verdict = "unknown" | "safe" | "suspicious" | "dangerous";
 export type Severity = "info" | "low" | "medium" | "high" | "critical";
+export type ScanCategory = "website" | "menu" | "payment" | "wifi" | "other";
 
 export interface Reason {
   code: string;
@@ -23,12 +24,34 @@ export interface Scan {
   id: string;
   content: string;
   content_type: string;
+  category: ScanCategory;
   url: string | null;
   verdict: Verdict;
   latitude: number | null;
   longitude: number | null;
   scanned_at: string;
   analysis: Analysis | null;
+}
+
+export interface ScanList {
+  items: Scan[];
+  total: number;
+}
+
+export interface ScanPosition {
+  latitude: number;
+  longitude: number;
+}
+
+export interface UserStats {
+  total_scans: number;
+  flagged_scans: number;
+  flagged_percent: number;
+  verdicts: { verdict: Verdict; count: number }[];
+  categories: { category: ScanCategory; count: number }[];
+  weekly: { week_start: string; count: number }[];
+  places: (ScanPosition & { count: number })[];
+  top_domains: { domain: string; count: number }[];
 }
 
 export class ApiError extends Error {
@@ -94,10 +117,35 @@ export async function register(email: string, password: string): Promise<void> {
   });
 }
 
-export function createScan(token: string, content: string): Promise<Scan> {
+function authHeader(token: string): Record<string, string> {
+  return { Authorization: `Bearer ${token}` };
+}
+
+export function createScan(token: string, content: string, position: ScanPosition | null): Promise<Scan> {
   return request<Scan>("/scans", {
     method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-    body: JSON.stringify({ content }),
+    headers: { "Content-Type": "application/json", ...authHeader(token) },
+    body: JSON.stringify({ content, ...position }),
   });
+}
+
+export function listScans(
+  token: string,
+  options: { limit: number; offset: number; verdict?: Verdict },
+): Promise<ScanList> {
+  const params = new URLSearchParams({ limit: String(options.limit), offset: String(options.offset) });
+  if (options.verdict !== undefined) params.set("verdict", options.verdict);
+  return request<ScanList>(`/scans?${params.toString()}`, { headers: authHeader(token) });
+}
+
+export function getScan(token: string, id: string): Promise<Scan> {
+  return request<Scan>(`/scans/${encodeURIComponent(id)}`, { headers: authHeader(token) });
+}
+
+export async function deleteScan(token: string, id: string): Promise<void> {
+  await request(`/scans/${encodeURIComponent(id)}`, { method: "DELETE", headers: authHeader(token) });
+}
+
+export function getStats(token: string): Promise<UserStats> {
+  return request<UserStats>("/stats/me", { headers: authHeader(token) });
 }

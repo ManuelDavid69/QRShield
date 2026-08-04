@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { useAuth } from "@/hooks/useAuth";
 import { ApiError, createScan, type Scan } from "@/services/api";
+import { getScanPosition } from "@/services/location";
 import { sanitizeForUpload, type ParsedQr } from "@/utils/qrContent";
 
 type AnalysisState =
@@ -19,7 +20,7 @@ export function useScanAnalysis(parsed: ParsedQr): { state: AnalysisState; retry
     if (token === null) return;
     setState({ status: "loading" });
     try {
-      const scan = await createScan(token, sanitizeForUpload(parsed));
+      const scan = await createScan(token, sanitizeForUpload(parsed), await getScanPosition());
       setState({ status: "done", scan });
     } catch (error) {
       if (error instanceof ApiError && error.status === 401) {

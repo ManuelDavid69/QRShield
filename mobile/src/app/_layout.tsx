@@ -23,8 +23,9 @@ function Navigator() {
       }}
     >
       <Stack.Protected guard={signedIn}>
-        <Stack.Screen name="index" options={{ headerShown: false }} />
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="result" options={{ title: "Résultat du scan", presentation: "card" }} />
+        <Stack.Screen name="scan/[id]" options={{ title: "Détail du scan" }} />
       </Stack.Protected>
       <Stack.Protected guard={!signedIn}>
         <Stack.Screen name="login" options={{ headerShown: false }} />

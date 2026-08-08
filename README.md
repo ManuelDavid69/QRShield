@@ -171,7 +171,7 @@ La position est facultative et n'est demandée qu'au premier scan. L'application
 
 ## Application mobile
 
-L'application comporte trois onglets : le scanner, l'historique, filtrable par verdict, et les statistiques. Après la connexion, elle s'ouvre directement sur la caméra. Une fois le QR code lu, il est envoyé au serveur et l'écran de résultat affiche le verdict avec un code couleur, le score, les raisons en clair et la chaîne de redirections. Le domaine de destination apparaît **en gros caractères**, car c'est l'information la plus utile pour repérer une arnaque et elle n'est pas toujours évidente à lire dans l'URL brute :
+L'application comporte quatre onglets : le scanner, l'historique, filtrable par verdict, les statistiques et le compte. Après la connexion, elle s'ouvre directement sur la caméra. Une fois le QR code lu, il est envoyé au serveur et l'écran de résultat affiche le verdict avec un code couleur, le score, les raisons en clair et la chaîne de redirections. Le domaine de destination apparaît **en gros caractères**, car c'est l'information la plus utile pour repérer une arnaque et elle n'est pas toujours évidente à lire dans l'URL brute :
 
 - `https://www.paypal.com@evil.com/login` mène en réalité vers `evil.com` : tout ce qui précède le `@` est ignoré par le navigateur.
 - `https://аpple.com`, écrit avec un « а » cyrillique, s'affiche `xn--pple-43d.com`, ce qui rend l'imitation visible.
@@ -181,6 +181,8 @@ Le lien n'est jamais ouvert automatiquement. Le bouton n'apparaît qu'une fois l
 Pour un QR code Wi-Fi, l'application affiche le nom du réseau et le type de sécurité, mais jamais le mot de passe. Celui-ci est retiré avant l'envoi au serveur : il ne quitte pas le téléphone.
 
 Sur Android, `expo-camera` renvoie dans le champ `data` une version reformatée du contenu : pour un QR code Wi-Fi, il s'agit du nom du réseau suivi du mot de passe, sans le préfixe `WIFI:`. Le type n'était donc plus reconnu et le mot de passe s'affichait en clair. J'ai découvert ce problème en testant sur un vrai téléphone, car les tests unitaires utilisaient directement le contenu brut. L'application lit désormais le champ `raw`, et un test reproduit ce cas.
+
+Les tests sur téléphone ont révélé un second problème : sur Android, `expo-camera` ignore la propriété `active`. La caméra et la lampe restaient donc allumées quand l'utilisateur changeait d'onglet, et des QR codes pouvaient être lus à son insu. Le composant caméra est maintenant retiré de l'écran dès que l'onglet n'est plus affiché, ce qui ferme réellement la caméra.
 
 ## Sécurité
 

@@ -32,6 +32,7 @@ export default function TabsLayout() {
       />
       <Tabs.Screen name="history" options={{ title: "Historique", tabBarIcon: tabIcon("time-outline") }} />
       <Tabs.Screen name="stats" options={{ title: "Statistiques", tabBarIcon: tabIcon("stats-chart-outline") }} />
+      <Tabs.Screen name="account" options={{ title: "Compte", tabBarIcon: tabIcon("person-outline") }} />
     </Tabs>
   );
 }

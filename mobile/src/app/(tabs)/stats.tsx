@@ -5,14 +5,12 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
 } from "react-native";
 import { useFocusEffect } from "expo-router";
 
 import BarList from "@/components/BarList";
 import PlaceList from "@/components/PlaceList";
-import { reportStyles } from "@/components/ScanReport";
 import WeeklyChart from "@/components/WeeklyChart";
 import { colors } from "@/constants/colors";
 import { useAuth } from "@/hooks/useAuth";
@@ -126,9 +124,6 @@ export default function StatsScreen() {
         </>
       ) : null}
 
-      <TouchableOpacity style={reportStyles.secondaryButton} activeOpacity={0.8} onPress={() => void signOut()}>
-        <Text style={reportStyles.secondaryButtonText}>Se déconnecter</Text>
-      </TouchableOpacity>
     </ScrollView>
   );
 }

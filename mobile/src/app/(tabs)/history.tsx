@@ -14,6 +14,7 @@ import ScanListItem from "@/components/ScanListItem";
 import { colors } from "@/constants/colors";
 import { useAuth } from "@/hooks/useAuth";
 import { ApiError, listScans, type Scan, type Verdict } from "@/services/api";
+import { mergeScans } from "@/utils/labels";
 
 const PAGE_SIZE = 20;
 
@@ -37,8 +38,9 @@ export default function HistoryScreen() {
 
   // La longueur courante est lue via une ref : load reste stable entre deux pages
   const itemsRef = useRef<Scan[]>([]);
-  // Empêche onEndReached de lancer deux chargements de suite
-  const loadingMore = useRef(false);
+  const loadingRef = useRef(false);
+  // Une réponse lente ne doit pas écraser celle d'un filtre choisi entre-temps
+  const lastRequest = useRef(0);
 
   useEffect(() => {
     itemsRef.current = items;
@@ -47,23 +49,28 @@ export default function HistoryScreen() {
   const load = useCallback(
     async (reset: boolean) => {
       if (token === null) return;
-      if (reset) setLoading(true);
+      const requestId = ++lastRequest.current;
+      loadingRef.current = true;
       const offset = reset ? 0 : itemsRef.current.length;
       try {
         const data = await listScans(token, { limit: PAGE_SIZE, offset, verdict });
+        if (requestId !== lastRequest.current) return;
         setTotal(data.total);
         setError(null);
-        setItems((prev) => (reset ? data.items : [...prev, ...data.items]));
+        setItems((prev) => (reset ? data.items : mergeScans(prev, data.items)));
       } catch (cause) {
         if (cause instanceof ApiError && cause.status === 401) {
           await signOut();
           return;
         }
+        if (requestId !== lastRequest.current) return;
         setError(cause instanceof Error ? cause.message : "Une erreur est survenue.");
       } finally {
-        setLoading(false);
-        setRefreshing(false);
-        loadingMore.current = false;
+        if (requestId === lastRequest.current) {
+          loadingRef.current = false;
+          setLoading(false);
+          setRefreshing(false);
+        }
       }
     },
     [token, verdict, signOut],
@@ -72,17 +79,14 @@ export default function HistoryScreen() {
   // Recharge à chaque retour sur l'écran et à chaque changement de filtre
   useFocusEffect(
     useCallback(() => {
-      if (token === null) return;
-      itemsRef.current = [];
-      setItems([]);
       void load(true);
-    }, [token, load]),
+    }, [load]),
   );
 
   const handleEndReached = useCallback(() => {
-    if (loadingMore.current) return;
-    if (itemsRef.current.length >= total) return;
-    loadingMore.current = true;
+    // FlatList déclenche aussi cet événement sur une liste vide ou pendant un rechargement
+    const count = itemsRef.current.length;
+    if (loadingRef.current || count === 0 || count >= total) return;
     void load(false);
   }, [load, total]);
 
@@ -143,17 +147,17 @@ const styles = StyleSheet.create({
   },
   filters: {
     flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
+    gap: 6,
     paddingHorizontal: 16,
     paddingTop: 16,
   },
   chip: {
+    flex: 1,
+    alignItems: "center",
     borderRadius: 999,
     borderWidth: 1,
     borderColor: colors.border,
     backgroundColor: colors.surface,
-    paddingHorizontal: 14,
     paddingVertical: 8,
   },
   chipActive: {

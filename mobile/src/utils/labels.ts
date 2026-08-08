@@ -1,3 +1,4 @@
+import { parseQrContent } from "@/utils/qrContent";
 import type { Scan, ScanCategory } from "@/services/api";
 
 export const categoryLabels: Record<ScanCategory, string> = {
@@ -24,7 +25,17 @@ export function formatWeek(isoDate: string): string {
   });
 }
 
+// Une page peut contenir un scan déjà reçu si un nouveau scan a décalé la pagination
+export function mergeScans(current: Scan[], next: Scan[]): Scan[] {
+  const known = new Set(current.map((scan) => scan.id));
+  return [...current, ...next.filter((scan) => !known.has(scan.id))];
+}
+
 export function scanTitle(scan: Scan): string {
+  if (scan.content_type === "wifi") {
+    const ssid = parseQrContent(scan.content).wifi?.ssid;
+    return ssid ? `Wi-Fi : ${ssid}` : "Réseau Wi-Fi";
+  }
   return scan.analysis?.domain ?? scan.url ?? scan.content;
 }
 

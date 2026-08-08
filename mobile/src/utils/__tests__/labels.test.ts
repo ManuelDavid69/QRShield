@@ -1,6 +1,6 @@
 import type { Analysis, Scan } from "@/services/api";
 
-import { barWidth, categoryLabels, scanTitle } from "../labels";
+import { barWidth, categoryLabels, mergeScans, scanTitle } from "../labels";
 
 const analysis: Analysis = {
   final_url: "https://exemple.fr",
@@ -67,5 +67,21 @@ describe("barWidth", () => {
 
   it("renvoie 0 quand le maximum est nul", () => {
     expect(barWidth(3, 0)).toBe(0);
+  });
+});
+
+describe("mergeScans", () => {
+  it("n'ajoute jamais deux fois le même scan", () => {
+    const a = { id: "a" } as Scan;
+    const b = { id: "b" } as Scan;
+    const c = { id: "c" } as Scan;
+    expect(mergeScans([a, b], [b, c]).map((scan) => scan.id)).toEqual(["a", "b", "c"]);
+  });
+});
+
+describe("scanTitle pour un QR code Wi-Fi", () => {
+  it("affiche le nom du réseau et pas le contenu brut", () => {
+    const scan = { content_type: "wifi", content: "WIFI:T:WPA;S:MaBox_Test;P:***;;", analysis: null, url: null } as Scan;
+    expect(scanTitle(scan)).toBe("Wi-Fi : MaBox_Test");
   });
 });

@@ -54,6 +54,12 @@ export interface UserStats {
   top_domains: { domain: string; count: number }[];
 }
 
+export interface Account {
+  id: string;
+  email: string;
+  created_at: string;
+}
+
 export class ApiError extends Error {
   // status = 0 : le serveur n'a pas pu être joint
   constructor(
@@ -75,9 +81,16 @@ function apiBaseUrl(): string {
   return `http://${host}:8001`;
 }
 
-function errorMessage(status: number, body: unknown): string {
-  if (status === 422) return "Vérifiez les informations saisies.";
+export function errorMessage(status: number, body: unknown): string {
   const detail = (body as { detail?: unknown } | null)?.detail;
+  if (status === 422) {
+    // FastAPI indique le champ refusé : le mot de passe est validé avant de chercher le compte
+    const first = Array.isArray(detail) ? (detail[0] as { loc?: unknown[] } | undefined) : undefined;
+    const field = first?.loc?.at(-1);
+    if (field === "password") return "Le mot de passe doit contenir au moins 10 caractères.";
+    if (field === "email") return "Cette adresse e-mail n'est pas valide.";
+    return "Vérifiez les informations saisies.";
+  }
   return typeof detail === "string" ? detail : "Le serveur a renvoyé une erreur.";
 }
 
@@ -144,6 +157,10 @@ export function getScan(token: string, id: string): Promise<Scan> {
 
 export async function deleteScan(token: string, id: string): Promise<void> {
   await request(`/scans/${encodeURIComponent(id)}`, { method: "DELETE", headers: authHeader(token) });
+}
+
+export function getMe(token: string): Promise<Account> {
+  return request<Account>("/auth/me", { headers: authHeader(token) });
 }
 
 export function getStats(token: string): Promise<UserStats> {

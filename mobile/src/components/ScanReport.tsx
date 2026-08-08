@@ -9,6 +9,9 @@ import type { Analysis, Verdict } from "@/services/api";
 import { isOpenableUrl, typeLabels, type ParsedQr } from "@/utils/qrContent";
 import { hostOf, verdictAdvice } from "@/utils/verdict";
 
+// Longueur fixe : afficher une étoile par caractère révélerait la taille du mot de passe
+const MASKED_PASSWORD = "********";
+
 interface InfoRowProps {
   label: string;
   value: string;
@@ -99,7 +102,7 @@ export default function ScanReport({ parsed, analysis, analyzing, header, footer
           <InfoRow label="Nom du réseau" value={parsed.wifi.ssid.length > 0 ? parsed.wifi.ssid : "Inconnu"} />
           <InfoRow label="Sécurité" value={parsed.wifi.security} />
           <InfoRow label="Réseau masqué" value={parsed.wifi.hidden ? "Oui" : "Non"} />
-          <InfoRow label="Mot de passe" value={parsed.wifi.hasPassword ? "Présent" : "Aucun"} />
+          <InfoRow label="Mot de passe" value={parsed.wifi.hasPassword ? MASKED_PASSWORD : "Aucun"} />
         </View>
       ) : null}
 

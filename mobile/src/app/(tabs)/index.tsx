@@ -21,6 +21,7 @@ export default function ScanScreen() {
     useCallback(() => {
       locked.current = false;
       return () => {
+        locked.current = true;
         setTorch(false);
       };
     }, []),
@@ -43,14 +44,17 @@ export default function ScanScreen() {
   return (
     <View style={styles.container}>
       <StatusBar style="light" />
-      <CameraView
-        style={StyleSheet.absoluteFill}
-        facing="back"
-        active={isFocused}
-        enableTorch={torch}
-        barcodeScannerSettings={{ barcodeTypes: ["qr"] }}
-        onBarcodeScanned={handleScan}
-      />
+      {/* La prop active est ignorée sur Android : la caméra et la lampe restaient allumées en
+          arrière-plan. Retirer le composant ferme vraiment la caméra quand l'écran est masqué. */}
+      {isFocused ? (
+        <CameraView
+          style={StyleSheet.absoluteFill}
+          facing="back"
+          enableTorch={torch}
+          barcodeScannerSettings={{ barcodeTypes: ["qr"] }}
+          onBarcodeScanned={handleScan}
+        />
+      ) : null}
       <ScanFrame />
       <SafeAreaView style={styles.overlay}>
         <Text style={styles.title}>QRShield</Text>

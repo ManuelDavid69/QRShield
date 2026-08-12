@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
@@ -9,12 +9,18 @@ from app.models import User
 from app.schemas.user import Token, UserCreate, UserOut
 from app.security.dependencies import get_current_user
 from app.security.passwords import hash_password, needs_rehash, verify_password
+from app.security.rate_limit import client_ip, enforce, limit_by_ip, login_limiter, register_limiter
 from app.security.tokens import create_access_token
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
-@router.post("/register", response_model=UserOut, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/register",
+    response_model=UserOut,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(limit_by_ip(register_limiter))],
+)
 def register(body: UserCreate, db: Session = Depends(get_db)) -> User:
     email = body.email.strip().lower()
     if db.scalar(select(User).where(User.email == email)) is not None:
@@ -33,8 +39,14 @@ def register(body: UserCreate, db: Session = Depends(get_db)) -> User:
 
 
 @router.post("/login", response_model=Token)
-def login(form: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)) -> Token:
+def login(
+    request: Request,
+    form: OAuth2PasswordRequestForm = Depends(),
+    db: Session = Depends(get_db),
+) -> Token:
     email = form.username.strip().lower()
+    # Par adresse IP et par compte : freine le test de mots de passe sans bloquer tout un réseau
+    enforce(login_limiter, f"{client_ip(request)}:{email}")
     user = db.scalar(select(User).where(User.email == email))
 
     # Vérification systématique (hash bidon si l'email est inconnu) : même temps de réponse

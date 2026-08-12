@@ -10,6 +10,8 @@ from app.database import get_db
 from app.models import Scan, UrlAnalysis, User, Verdict
 from app.schemas.scan import ScanCreate, ScanList, ScanOut, scan_to_out
 from app.security.dependencies import get_current_user
+from app.security.rate_limit import limit_by_ip, report_limiter
+from app.services.community import community_signals, record_automatic_report, record_user_report, remove_reports_if_last_scan
 from app.services.content_parser import categorize, parse_qr_content
 from app.services.qr_analyzer import UrlAnalyzer, get_url_analyzer
 from app.services.url_analyses import get_or_create_analysis, refresh_analysis
@@ -44,12 +46,14 @@ def create_scan(
     )
     if parsed.url is not None:
         scan.analysis = get_or_create_analysis(db, parsed.url)
-        refresh_analysis(db, scan.analysis, analyzer, get_settings().analysis_ttl_hours)
+        refresh_analysis(db, scan.analysis, analyzer, get_settings().analysis_ttl_hours, community_signals)
     if body.latitude is not None and body.longitude is not None:
         # WKT : longitude en premier (x, y)
         scan.location = WKTElement(f"POINT({body.longitude} {body.latitude})", srid=4326)
 
     db.add(scan)
+    db.flush()
+    record_automatic_report(db, scan)
     db.commit()
     db.refresh(scan)
     return scan_to_out(scan)
@@ -99,5 +103,26 @@ def delete_scan(
     current: User = Depends(get_current_user),
 ) -> None:
     scan = _get_owned_scan(db, scan_id, current)
+    analysis_id = scan.analysis_id
     db.delete(scan)
+    db.flush()
+    remove_reports_if_last_scan(db, current.id, analysis_id)
     db.commit()
+
+
+@router.post(
+    "/{scan_id}/report",
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Depends(limit_by_ip(report_limiter))],
+)
+def report_scan(
+    scan_id: uuid.UUID,
+    db: Session = Depends(get_db),
+    current: User = Depends(get_current_user),
+) -> None:
+    scan = _get_owned_scan(db, scan_id, current)
+    if scan.analysis is None:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "Seuls les liens peuvent être signalés")
+    record_user_report(db, scan)
+    db.commit()
+

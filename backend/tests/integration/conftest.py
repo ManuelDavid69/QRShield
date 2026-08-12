@@ -8,6 +8,7 @@ from sqlalchemy.orm import sessionmaker
 from app.config import get_settings
 from app.database import Base, get_db
 from app.main import app
+from app.security.rate_limit import ALL_LIMITERS
 from app.services.analysis.safe_fetch import FetchResult, Hop
 from app.services.qr_analyzer import UrlAnalyzer, get_url_analyzer
 import app.models as _models  # noqa: F401  # enregistre les tables (alias sinon "app" écrase l'appli FastAPI)
@@ -76,6 +77,8 @@ def api(test_engine, db_session_factory, offline_fetcher):
         finally:
             db.close()
 
+    for limiter in ALL_LIMITERS:
+        limiter.reset()
     app.dependency_overrides[get_db] = _get_db
     # vrai pipeline d'analyse (heuristiques + scoring), sans services externes
     app.dependency_overrides[get_url_analyzer] = lambda: UrlAnalyzer(fetcher=offline_fetcher)

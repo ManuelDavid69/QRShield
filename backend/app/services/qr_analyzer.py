@@ -1,6 +1,7 @@
 """Analyse complète d'une URL : redirections, indices dans l'adresse, réputation, âge du domaine."""
 
 import logging
+from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
@@ -210,7 +211,11 @@ class UrlAnalyzer:
             )], age
         return [], age
 
-    def analyze(self, url: str) -> AnalysisOutcome:
+    def analyze(
+        self,
+        url: str,
+        community: Callable[[str | None], list[Signal]] | None = None,
+    ) -> AnalysisOutcome:
         fetch = self._fetcher.fetch(url)
         final_url = fetch.final_url or url
         domain = _registered_domain(final_url)
@@ -231,7 +236,8 @@ class UrlAnalyzer:
             vt_signals, vt_detail = vt.result()
             age_signals, age_days = age.result()
 
-        signals = deduplicate(signals + sb_signals + vt_signals + age_signals)
+        community_found = community(domain) if community is not None else []
+        signals = deduplicate(signals + sb_signals + vt_signals + age_signals + community_found)
         score, verdict = compute_score(signals)
 
         return AnalysisOutcome(

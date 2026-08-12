@@ -1,5 +1,7 @@
 import hashlib
 import logging
+import uuid
+from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
 from typing import TYPE_CHECKING
 from urllib.parse import urlsplit
@@ -9,6 +11,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.models import UrlAnalysis
+from app.services.analysis.signals import Signal
 
 if TYPE_CHECKING:
     from app.services.qr_analyzer import UrlAnalyzer
@@ -46,7 +49,13 @@ def get_or_create_analysis(db: Session, url: str) -> UrlAnalysis:
         return db.scalars(select(UrlAnalysis).where(UrlAnalysis.url_hash == url_hash)).one()
 
 
-def refresh_analysis(db: Session, analysis: UrlAnalysis, analyzer: "UrlAnalyzer", ttl_hours: int) -> None:
+def refresh_analysis(
+    db: Session,
+    analysis: UrlAnalysis,
+    analyzer: "UrlAnalyzer",
+    ttl_hours: int,
+    community: Callable[[Session, str | None, uuid.UUID], list[Signal]],
+) -> None:
     """Relance l'analyse si elle n'a jamais été faite ou si elle date de plus de ttl_hours.
 
     Le résultat est partagé : la même URL scannée par 1000 personnes n'est analysée
@@ -56,7 +65,7 @@ def refresh_analysis(db: Session, analysis: UrlAnalysis, analyzer: "UrlAnalyzer"
     if analysis.analyzed_at is not None and now - analysis.analyzed_at < timedelta(hours=ttl_hours):
         return
     try:
-        outcome = analyzer.analyze(analysis.url)
+        outcome = analyzer.analyze(analysis.url, lambda domain: community(db, domain, analysis.id))
     except Exception:
         # Une analyse ratée ne doit jamais empêcher d'enregistrer le scan
         logger.exception("échec de l'analyse de %s", analysis.domain)

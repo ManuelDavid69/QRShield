@@ -17,6 +17,7 @@ def _load_dotenv(path: Path) -> None:
 _load_dotenv(Path(__file__).resolve().parents[2] / ".env")
 os.environ.setdefault("DATABASE_URL", "postgresql+psycopg://test:test@localhost:5432/test")
 os.environ.setdefault("JWT_SECRET_KEY", "cle-de-test-uniquement-pour-pytest-0123456789")
+os.environ.setdefault("COMMUNITY_SECRET", "autre-cle-de-test-pour-les-signalements-012345")
 
 import pytest  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402

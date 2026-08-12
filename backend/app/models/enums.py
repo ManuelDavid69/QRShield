@@ -25,3 +25,14 @@ class ScanCategory(str, enum.Enum):
     PAYMENT = "payment"
     WIFI = "wifi"
     OTHER = "other"
+
+
+class ThreatType(str, enum.Enum):
+    PHISHING = "phishing"
+    MALWARE = "malware"
+    OTHER = "other"
+
+
+class ReportSource(str, enum.Enum):
+    AUTOMATIC = "automatic"
+    USER = "user"

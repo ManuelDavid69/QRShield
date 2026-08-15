@@ -32,5 +32,12 @@ services:
       - ./backend/alembic:/code/alembic
     command: sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
 
+  web:
+    build: ./web
+    ports:
+      - "8080:8080"
+    depends_on:
+      - backend
+
 volumes:
   pgdata:

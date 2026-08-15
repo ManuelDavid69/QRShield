@@ -40,7 +40,7 @@ docker compose up --build
 
 Avant le premier lancement, il faut modifier dans `.env` le mot de passe de la base et renseigner `JWT_SECRET_KEY` (la commande pour générer une clé est indiquée dans le fichier). Les clés `GOOGLE_SAFE_BROWSING_API_KEY` et `VIRUSTOTAL_API_KEY` sont facultatives : sans elles, l'analyse fonctionne mais se limite aux redirections, aux indices dans l'adresse et à l'âge du domaine.
 
-L'API est ensuite disponible sur http://localhost:8000. La documentation Swagger se trouve sur http://localhost:8000/docs et la route `GET /health` indique si la base de données répond. Les migrations Alembic sont appliquées automatiquement au démarrage du conteneur.
+La page web publique est alors disponible sur http://localhost:8080 et l'API sur http://localhost:8000. La documentation Swagger se trouve sur http://localhost:8000/docs et la route `GET /health` indique si la base de données répond. Les migrations Alembic sont appliquées automatiquement au démarrage du conteneur.
 
 Je n'utilise pas Docker Desktop, qui prend beaucoup de place, mais Docker installé directement dans WSL. Dans ce cas, il faut démarrer le démon (`sudo service docker start`) puis lancer les commandes depuis WSL, dans `/mnt/d/...`. La variable `WATCHFILES_FORCE_POLLING` du fichier compose sert à garder le rechargement automatique de l'API, car les modifications faites sur un disque Windows ne sont pas détectées autrement.
 
@@ -108,7 +108,10 @@ La documentation complète est disponible sur `/docs`. Routes actuelles :
 | POST | `/scans` | Enregistrer un QR code scanné, avec une position GPS facultative |
 | GET | `/scans` | Historique paginé, avec un filtre facultatif sur le verdict |
 | GET / DELETE | `/scans/{id}` | Consulter ou supprimer un scan |
+| POST | `/scans/{id}/report` | Signaler un lien à la communauté |
 | GET | `/stats/me` | Statistiques personnelles |
+| GET | `/community/zones` | Zones signalées, sans compte |
+| GET | `/community/stats` | Statistiques globales anonymisées, sans compte |
 
 Le type de contenu (lien, Wi-Fi, e-mail, téléphone, contact...) est détecté par le serveur. Pour un lien, la réponse de `POST /scans` contient aussi le résultat de l'analyse de sécurité : verdict, score, URL finale, chaîne de redirections et liste des raisons.
 
@@ -169,9 +172,44 @@ Les lieux sont regroupés avec `ST_ClusterDBSCAN`, une fonction de PostGIS qui r
 
 La position est facultative et n'est demandée qu'au premier scan. L'application l'arrondit à environ 100 mètres avant de l'envoyer, car une position précise n'apporte rien à ces statistiques et révélerait l'adresse de l'utilisateur. Le nom des lieux est résolu sur le téléphone : le serveur n'a besoin que des coordonnées arrondies.
 
+## Volet communautaire
+
+Chaque lien jugé suspect ou dangereux alimente une base commune, et l'utilisateur peut aussi signaler lui-même un lien qui lui paraît frauduleux. Ces signalements sont affichés sur une carte, dans l'application et sur une page web publique, et ils influencent le score.
+
+### Anonymisation
+
+Une carte publique de ce type révèle facilement où passent les gens. J'ai donc conçu la table `community_reports` pour que l'anonymat ne dépende pas de la bonne volonté du serveur :
+
+- Elle ne contient ni identifiant d'utilisateur, ni lien vers le scan d'origine.
+- La position est ramenée au centre d'une maille d'environ un kilomètre.
+- La date est conservée au jour près. Une heure précise permettrait de retrouver le scan correspondant.
+- Seul le domaine est publié, car une URL complète peut contenir des données personnelles.
+- Une zone ou un domaine n'apparaît publiquement qu'à partir de deux signalements : une zone avec un seul signalement désignerait le passage d'une seule personne.
+
+Il faut tout de même éviter qu'une même personne compte plusieurs fois. Chaque signalement porte donc une empreinte HMAC calculée à partir de l'utilisateur, de l'URL et d'une clé secrète. Elle est identique pour une même personne et une même URL, ce qui bloque les doublons, mais elle change d'une URL à l'autre : il est impossible de relier deux signalements entre eux, et impossible de vérifier si un utilisateur donné a signalé un lien sans connaître la clé. Supprimer un scan retire aussi les signalements associés.
+
+### Apport au score
+
+La difficulté est d'éviter un score qui s'alimente lui-même. Si les signalements automatiques d'une URL comptaient pour cette même URL, chaque lien suspect finirait par devenir dangereux sans aucune nouvelle information. Seules deux données sont donc prises en compte :
+
+- Les signalements faits par des personnes : à partir de 3, un indice moyen ; à partir de 10, un indice élevé.
+- La présence d'autres liens classés dangereux sur le même domaine, ce qui constitue une information réellement indépendante.
+
+L'apport de la communauté est plafonné au niveau « élevé ». Une série de faux comptes peut donc rendre un site suspect, mais pas dangereux, et les domaines officiels des marques surveillées ne peuvent pas être visés. Les routes publiques, la connexion, l'inscription et les signalements sont limités en débit. Cette limite ne suffit pas contre un attaquant qui dispose de nombreuses adresses IP et de nombreux comptes ; une vérification des adresses e-mail réduirait ce risque.
+
+### Page web
+
+La page publique, sans compte, est dans `web/`. Elle présente la carte, l'évolution des signalements, les types de menaces, les villes et les domaines les plus touchés. Comme le projet n'a pas encore d'utilisateurs, elle s'appuie pour l'instant sur des données fictives, ce qu'un bandeau indique clairement. Le script de démonstration n'utilise que l'extension réservée `.example`, afin de ne mettre en cause aucun vrai site :
+
+```bash
+cd backend
+python -m scripts.seed_demo            # ajoute les données fictives
+python -m scripts.seed_demo --clear    # les retire
+```
+
 ## Application mobile
 
-L'application comporte quatre onglets : le scanner, l'historique, filtrable par verdict, les statistiques et le compte. Après la connexion, elle s'ouvre directement sur la caméra. Une fois le QR code lu, il est envoyé au serveur et l'écran de résultat affiche le verdict avec un code couleur, le score, les raisons en clair et la chaîne de redirections. Le domaine de destination apparaît **en gros caractères**, car c'est l'information la plus utile pour repérer une arnaque et elle n'est pas toujours évidente à lire dans l'URL brute :
+L'application comporte cinq onglets : le scanner, l'historique, filtrable par verdict, la carte communautaire, les statistiques et le compte. La carte utilise Leaflet dans une WebView, comme le site : cela évite d'avoir à gérer une clé Google Maps. La bibliothèque est chargée avec une empreinte d'intégrité, et aucun lien ne peut s'ouvrir dans cette WebView. Après la connexion, elle s'ouvre directement sur la caméra. Une fois le QR code lu, il est envoyé au serveur et l'écran de résultat affiche le verdict avec un code couleur, le score, les raisons en clair et la chaîne de redirections. Le domaine de destination apparaît **en gros caractères**, car c'est l'information la plus utile pour repérer une arnaque et elle n'est pas toujours évidente à lire dans l'URL brute :
 
 - `https://www.paypal.com@evil.com/login` mène en réalité vers `evil.com` : tout ce qui précède le `@` est ignoré par le navigateur.
 - `https://аpple.com`, écrit avec un « а » cyrillique, s'affiche `xn--pple-43d.com`, ce qui rend l'imitation visible.
@@ -197,7 +235,10 @@ Les tests sur téléphone ont révélé un second problème : sur Android, `expo
 
 - Sur le téléphone, le token JWT est conservé avec `expo-secure-store`, qui s'appuie sur le Keystore Android et le Keychain iOS. AsyncStorage l'aurait stocké en clair.
 
-Il reste à ajouter les refresh tokens (pour l'instant, il faut se reconnecter au bout d'une heure) et une limitation du nombre de tentatives de connexion. En développement, l'application communique avec l'API en HTTP sur le réseau local ; un déploiement réel devra passer en HTTPS.
+- Le nombre de tentatives de connexion est limité par adresse IP et par compte, ce qui freine le test de mots de passe.
+- La page web est servie par nginx sans droits root, avec une politique de sécurité du contenu (CSP).
+
+Il reste à ajouter les refresh tokens : pour l'instant, il faut se reconnecter au bout d'une heure. La limitation de débit est conservée en mémoire, ce qui suffit pour un seul processus ; avec plusieurs instances de l'API, il faudrait un compteur partagé comme Redis. En développement, l'application communique avec l'API en HTTP sur le réseau local ; un déploiement réel devra passer en HTTPS.
 
 ## Organisation du code
 
@@ -221,7 +262,11 @@ mobile/
     hooks/         connexion, envoi et analyse d'un scan
     services/      appels à l'API, stockage sécurisé du token, position
     utils/         lecture du contenu des QR codes, libellés
-web/               page web publique React (à venir)
+web/
+  src/
+    components/    carte Leaflet, graphiques, tableau
+    services/      appels à l'API publique
+    utils/         ville la plus proche d'une zone
 ```
 
 ## Avancement
@@ -233,5 +278,5 @@ web/               page web publique React (à venir)
 - [x] Algorithme de scoring
 - [x] Comptes utilisateurs et affichage du résultat de l'analyse dans l'application
 - [x] Historique et statistiques personnelles dans l'application
-- [ ] Carte communautaire (application et page web publique)
+- [x] Carte communautaire (application et page web publique)
 - [ ] Notifications

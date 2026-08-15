@@ -4,6 +4,7 @@ import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from "rea
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 
+import ReportButton from "@/components/ReportButton";
 import ScanReport, { reportStyles } from "@/components/ScanReport";
 import { colors } from "@/constants/colors";
 import { useScanAnalysis } from "@/hooks/useScanAnalysis";
@@ -53,9 +54,12 @@ export default function ResultScreen() {
         analyzing={state.status === "loading"}
         header={header}
         footer={
-          <TouchableOpacity style={reportStyles.secondaryButton} activeOpacity={0.8} onPress={() => router.back()}>
-            <Text style={reportStyles.secondaryButtonText}>Scanner un autre QR code</Text>
-          </TouchableOpacity>
+          <>
+            {isUrl && state.status === "done" ? <ReportButton scanId={state.scan.id} /> : null}
+            <TouchableOpacity style={reportStyles.secondaryButton} activeOpacity={0.8} onPress={() => router.back()}>
+              <Text style={reportStyles.secondaryButtonText}>Scanner un autre QR code</Text>
+            </TouchableOpacity>
+          </>
         }
       />
     </SafeAreaView>

@@ -3,6 +3,7 @@ import { ActivityIndicator, Alert, StyleSheet, Text, TouchableOpacity, View } fr
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 
+import ReportButton from "@/components/ReportButton";
 import ScanReport, { reportStyles } from "@/components/ScanReport";
 import { colors } from "@/constants/colors";
 import { useAuth } from "@/hooks/useAuth";
@@ -90,9 +91,12 @@ export default function ScanDetailScreen() {
           </View>
         }
         footer={
-          <TouchableOpacity style={reportStyles.secondaryButton} activeOpacity={0.8} onPress={handleDelete}>
-            <Text style={styles.deleteText}>Supprimer ce scan</Text>
-          </TouchableOpacity>
+          <>
+            {scan.analysis !== null ? <ReportButton scanId={scan.id} /> : null}
+            <TouchableOpacity style={reportStyles.secondaryButton} activeOpacity={0.8} onPress={handleDelete}>
+              <Text style={styles.deleteText}>Supprimer ce scan</Text>
+            </TouchableOpacity>
+          </>
         }
       />
     </SafeAreaView>

@@ -31,7 +31,8 @@ export default function TabsLayout() {
         options={{ title: "Scanner", headerShown: false, tabBarIcon: tabIcon("scan-outline") }}
       />
       <Tabs.Screen name="history" options={{ title: "Historique", tabBarIcon: tabIcon("time-outline") }} />
-      <Tabs.Screen name="stats" options={{ title: "Statistiques", tabBarIcon: tabIcon("stats-chart-outline") }} />
+      <Tabs.Screen name="map" options={{ title: "Carte communautaire", tabBarLabel: "Carte", tabBarIcon: tabIcon("map-outline") }} />
+      <Tabs.Screen name="stats" options={{ title: "Statistiques", tabBarLabel: "Stats", tabBarIcon: tabIcon("stats-chart-outline") }} />
       <Tabs.Screen name="account" options={{ title: "Compte", tabBarIcon: tabIcon("person-outline") }} />
     </Tabs>
   );

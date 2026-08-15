@@ -54,6 +54,13 @@ export interface UserStats {
   top_domains: { domain: string; count: number }[];
 }
 
+export interface Zone {
+  latitude: number;
+  longitude: number;
+  reports: number;
+  dangerous: number;
+}
+
 export interface Account {
   id: string;
   email: string;
@@ -161,6 +168,15 @@ export async function deleteScan(token: string, id: string): Promise<void> {
 
 export function getMe(token: string): Promise<Account> {
   return request<Account>("/auth/me", { headers: authHeader(token) });
+}
+
+export async function reportScan(token: string, id: string): Promise<void> {
+  await request(`/scans/${encodeURIComponent(id)}/report`, { method: "POST", headers: authHeader(token) });
+}
+
+// Route publique : la carte ne dépend pas du compte
+export function getZones(): Promise<{ zones: Zone[]; period_days: number }> {
+  return request("/community/zones", {});
 }
 
 export function getStats(token: string): Promise<UserStats> {

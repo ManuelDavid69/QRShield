@@ -1,11 +1,12 @@
 import type { ReactNode } from "react";
-import { Alert, Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 import ReasonList from "@/components/ReasonList";
 import RedirectChain from "@/components/RedirectChain";
 import VerdictCard from "@/components/VerdictCard";
 import { colors } from "@/constants/colors";
 import type { Analysis, Verdict } from "@/services/api";
+import { confirmDialog, notify } from "@/utils/dialog";
 import { isOpenableUrl, typeLabels, type ParsedQr } from "@/utils/qrContent";
 import { hostOf, verdictAdvice } from "@/utils/verdict";
 
@@ -33,18 +34,17 @@ function confirmOpen(url: string, host: string, verdict: Verdict) {
   const title = verdict === "dangerous" ? "Lien dangereux" : verdict === "suspicious" ? "Lien suspect" : "Ouvrir ce lien ?";
   const message = risky ? `${host}\n\n${verdictAdvice[verdict]}` : host;
 
-  Alert.alert(title, message, [
-    { text: "Annuler", style: "cancel" },
-    {
-      text: risky ? "Ouvrir quand même" : "Ouvrir",
-      style: risky ? "destructive" : "default",
-      onPress: () => {
-        void Linking.openURL(url).catch(() => {
-          Alert.alert("Impossible d'ouvrir ce lien", "Aucune application ne peut gérer cette adresse.");
-        });
-      },
+  confirmDialog({
+    title,
+    message,
+    confirmLabel: risky ? "Ouvrir quand même" : "Ouvrir",
+    destructive: risky,
+    onConfirm: () => {
+      void Linking.openURL(url).catch(() => {
+        notify("Impossible d'ouvrir ce lien", "Aucune application ne peut gérer cette adresse.");
+      });
     },
-  ]);
+  });
 }
 
 interface ScanReportProps {

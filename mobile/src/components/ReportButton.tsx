@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { ActivityIndicator, Alert, StyleSheet, Text, TouchableOpacity } from "react-native";
+import { ActivityIndicator, StyleSheet, Text, TouchableOpacity } from "react-native";
 
 import { reportStyles } from "@/components/ScanReport";
 import { colors } from "@/constants/colors";
 import { useAuth } from "@/hooks/useAuth";
 import { ApiError, reportScan } from "@/services/api";
+import { confirmDialog, notify } from "@/utils/dialog";
 
 export default function ReportButton({ scanId }: { scanId: string }) {
   const { token, signOut } = useAuth();
@@ -22,19 +23,18 @@ export default function ReportButton({ scanId }: { scanId: string }) {
         await signOut();
         return;
       }
-      Alert.alert("Signalement impossible", error instanceof ApiError ? error.message : "Une erreur est survenue.");
+      notify("Signalement impossible", error instanceof ApiError ? error.message : "Une erreur est survenue.");
     }
   }
 
   function confirm() {
-    Alert.alert(
-      "Signaler ce lien ?",
-      "Le signalement est anonyme et aide les autres utilisateurs à repérer les QR codes piégés.",
-      [
-        { text: "Annuler", style: "cancel" },
-        { text: "Signaler", style: "destructive", onPress: () => void send() },
-      ],
-    );
+    confirmDialog({
+      title: "Signaler ce lien ?",
+      message: "Le signalement est anonyme et aide les autres utilisateurs à repérer les QR codes piégés.",
+      confirmLabel: "Signaler",
+      destructive: true,
+      onConfirm: () => void send(),
+    });
   }
 
   if (status === "done") {

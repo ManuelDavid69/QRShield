@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 
@@ -8,6 +8,7 @@ import ScanReport, { reportStyles } from "@/components/ScanReport";
 import { colors } from "@/constants/colors";
 import { useAuth } from "@/hooks/useAuth";
 import { ApiError, deleteScan, getScan, type Scan } from "@/services/api";
+import { confirmDialog, notify } from "@/utils/dialog";
 import { formatScanDate } from "@/utils/labels";
 import { parseQrContent } from "@/utils/qrContent";
 
@@ -42,24 +43,20 @@ export default function ScanDetailScreen() {
   const parsed = useMemo(() => (scan === null ? null : parseQrContent(scan.content)), [scan]);
 
   const handleDelete = useCallback(() => {
-    Alert.alert("Supprimer ce scan ?", "Il disparaîtra de votre historique et de vos statistiques.", [
-      { text: "Annuler", style: "cancel" },
-      {
-        text: "Supprimer",
-        style: "destructive",
-        onPress: () => {
-          if (token === null) return;
-          void deleteScan(token, id)
-            .then(() => router.back())
-            .catch((cause: unknown) => {
-              Alert.alert(
-                "Suppression impossible",
-                cause instanceof Error ? cause.message : "Une erreur est survenue.",
-              );
-            });
-        },
+    confirmDialog({
+      title: "Supprimer ce scan ?",
+      message: "Il disparaîtra de votre historique et de vos statistiques.",
+      confirmLabel: "Supprimer",
+      destructive: true,
+      onConfirm: () => {
+        if (token === null) return;
+        void deleteScan(token, id)
+          .then(() => router.back())
+          .catch((cause: unknown) => {
+            notify("Suppression impossible", cause instanceof Error ? cause.message : "Une erreur est survenue.");
+          });
       },
-    ]);
+    });
   }, [token, id, router]);
 
   if (error !== null) {

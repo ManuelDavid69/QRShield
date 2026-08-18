@@ -1,19 +1,11 @@
 import { useFocusEffect } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
-import { WebView, type WebViewNavigation } from "react-native-webview";
 
+import MapFrame from "@/components/MapFrame";
 import { colors } from "@/constants/colors";
 import { ApiError, getZones, type Zone } from "@/services/api";
 import { buildMapHtml } from "@/utils/mapHtml";
-
-// OpenStreetMap refuse les requêtes sans en-tête Referer : la page doit avoir une origine
-const PAGE_ORIGIN = "https://github.com/ManuelDavid69/QRShield";
-
-// La WebView ne sert qu'à afficher la carte : aucun lien ne doit s'y ouvrir
-function allowNavigation(request: WebViewNavigation): boolean {
-  return request.url.startsWith(PAGE_ORIGIN) || request.url === "about:blank";
-}
 
 export default function MapScreen() {
   const [zones, setZones] = useState<Zone[] | null>(null);
@@ -44,13 +36,7 @@ export default function MapScreen() {
 
   return (
     <View style={styles.container}>
-      <WebView
-        style={styles.map}
-        originWhitelist={["https://*", "about:*"]}
-        source={{ html, baseUrl: PAGE_ORIGIN }}
-        onShouldStartLoadWithRequest={allowNavigation}
-        setSupportMultipleWindows={false}
-      />
+      <MapFrame html={html} />
       <View style={styles.legend}>
         <View style={styles.legendRow}>
           <View style={[styles.dot, { backgroundColor: colors.dangerous }]} />
@@ -72,9 +58,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
-  },
-  map: {
-    flex: 1,
   },
   centered: {
     flex: 1,

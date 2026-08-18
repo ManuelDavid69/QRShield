@@ -1,0 +1,20 @@
+import { Alert } from "react-native";
+
+export interface ConfirmOptions {
+  title: string;
+  message: string;
+  confirmLabel: string;
+  destructive?: boolean;
+  onConfirm: () => void;
+}
+
+export function confirmDialog({ title, message, confirmLabel, destructive, onConfirm }: ConfirmOptions): void {
+  Alert.alert(title, message, [
+    { text: "Annuler", style: "cancel" },
+    { text: confirmLabel, style: destructive ? "destructive" : "default", onPress: onConfirm },
+  ]);
+}
+
+export function notify(title: string, message: string): void {
+  Alert.alert(title, message);
+}

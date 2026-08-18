@@ -42,6 +42,8 @@ export function buildMapHtml(zones: Zone[]): string {
     attribution: "&copy; OpenStreetMap",
     maxZoom: 14
   }).addTo(map);
+  // Sans préfixe, plus aucun lien dans la carte : rien ne peut quitter la page
+  map.attributionControl.setPrefix(false);
   markers.forEach(function (m) {
     L.circleMarker([m.lat, m.lon], {
       radius: m.radius,

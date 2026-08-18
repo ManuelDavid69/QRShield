@@ -96,6 +96,21 @@ npm test            # tests unitaires (Jest)
 npm run typecheck   # vérification TypeScript
 ```
 
+### Tests de bout en bout
+
+Le dossier `e2e/` contient 26 tests Playwright qui s'exécutent sur la vraie pile : API, base PostGIS et services de réputation. Ils couvrent l'API, la page web et le parcours complet de l'application, de l'inscription à la suppression d'un scan. Ils vérifient par exemple que le mot de passe Wi-Fi ne figure jamais dans la requête envoyée au serveur, ou qu'un signalement annulé ne change rien aux chiffres publics.
+
+```bash
+docker compose up -d
+cd e2e
+npm install
+npm test
+```
+
+Les tests utilisent Microsoft Edge, déjà présent sous Windows. L'application tourne dans le navigateur au format d'un téléphone, grâce à quelques fichiers `.web` : confirmations, stockage du token et affichage de la carte. Ces fichiers ne sont pas utilisés sur téléphone. Le script suppose que Docker tourne dans WSL.
+
+Ces tests ne remplacent pas un essai sur un vrai appareil. Ils ne couvrent ni la lecture par la caméra, ni la lampe, ni le Keystore, ni la WebView Android : les deux bugs décrits plus bas n'auraient été vus que sur un téléphone.
+
 ## API
 
 La documentation complète est disponible sur `/docs`. Routes actuelles :

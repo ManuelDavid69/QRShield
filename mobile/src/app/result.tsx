@@ -12,7 +12,12 @@ import { parseQrContent } from "@/utils/qrContent";
 
 export default function ResultScreen() {
   const { data } = useLocalSearchParams<{ data?: string }>();
-  const parsed = useMemo(() => parseQrContent(data ?? ""), [data]);
+  // Un nouveau lien remonte l'écran : l'analyse du précédent ne doit jamais s'afficher avec lui
+  return <ScanResult key={data ?? ""} data={data ?? ""} />;
+}
+
+function ScanResult({ data }: { data: string }) {
+  const parsed = useMemo(() => parseQrContent(data), [data]);
   const { state, retry } = useScanAnalysis(parsed);
 
   const isUrl = parsed.type === "url";

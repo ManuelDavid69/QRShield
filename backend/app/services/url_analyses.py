@@ -10,8 +10,9 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from app.models import UrlAnalysis
+from app.models import UrlAnalysis, Verdict
 from app.services.analysis.signals import Signal
+from app.services.notifications import notify_reclassified
 
 if TYPE_CHECKING:
     from app.services.qr_analyzer import UrlAnalyzer
@@ -71,6 +72,7 @@ def refresh_analysis(
         logger.exception("échec de l'analyse de %s", analysis.domain)
         return
 
+    was_harmless = analysis.verdict in (Verdict.SAFE, Verdict.SUSPICIOUS)
     analysis.final_url = outcome.final_url
     analysis.domain = outcome.domain
     analysis.score = outcome.score
@@ -79,3 +81,6 @@ def refresh_analysis(
     analysis.details = outcome.details
     analysis.analyzed_at = now
     db.flush()
+
+    if was_harmless and outcome.verdict is Verdict.DANGEROUS:
+        notify_reclassified(db, analysis)

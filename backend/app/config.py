@@ -13,6 +13,9 @@ class Settings(BaseSettings):
     domain_age_check: bool = True
     # une analyse plus vieille que ça est refaite au prochain scan de la même URL
     analysis_ttl_hours: int = 24
+    # le worker réanalyse par petits lots pour rester dans le quota de VirusTotal
+    reclassification_interval_minutes: int = 60
+    reclassification_batch: int = 20
     app_name: str = "QRShield API"
 
     # 32 caractères minimum, sinon une clé HS256 se bruteforce trop facilement

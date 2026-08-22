@@ -16,6 +16,12 @@ export default function ResultScreen() {
   return <ScanResult key={data ?? ""} data={data ?? ""} />;
 }
 
+// Ouvert par un lien externe, l'écran n'a pas de page précédente où revenir
+function backToScanner() {
+  if (router.canGoBack()) router.back();
+  else router.replace("/");
+}
+
 function ScanResult({ data }: { data: string }) {
   const parsed = useMemo(() => parseQrContent(data), [data]);
   const { state, retry } = useScanAnalysis(parsed);
@@ -61,7 +67,7 @@ function ScanResult({ data }: { data: string }) {
         footer={
           <>
             {isUrl && state.status === "done" ? <ReportButton scanId={state.scan.id} /> : null}
-            <TouchableOpacity style={reportStyles.secondaryButton} activeOpacity={0.8} onPress={() => router.back()}>
+            <TouchableOpacity style={reportStyles.secondaryButton} activeOpacity={0.8} onPress={backToScanner}>
               <Text style={reportStyles.secondaryButtonText}>Scanner un autre QR code</Text>
             </TouchableOpacity>
           </>

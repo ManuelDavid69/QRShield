@@ -96,6 +96,8 @@ npm test            # tests unitaires (Jest)
 npm run typecheck   # vérification TypeScript
 ```
 
+À chaque envoi sur GitHub, l'intégration continue exécute les tests du backend sur une base PostGIS, vérifie que les migrations correspondent aux modèles, puis contrôle l'application mobile (TypeScript, ESLint, Jest) et la compilation de la page web.
+
 ### Tests de bout en bout
 
 Le dossier `e2e/` contient 26 tests Playwright qui s'exécutent sur la vraie pile : API, base PostGIS et services de réputation. Ils couvrent l'API, la page web et le parcours complet de l'application, de l'inscription à la suppression d'un scan. Ils vérifient par exemple que le mot de passe Wi-Fi ne figure jamais dans la requête envoyée au serveur, ou qu'un signalement annulé ne change rien aux chiffres publics.
@@ -127,6 +129,8 @@ La documentation complète est disponible sur `/docs`. Routes actuelles :
 | GET | `/stats/me` | Statistiques personnelles |
 | GET | `/community/zones` | Zones signalées, sans compte |
 | GET | `/community/stats` | Statistiques globales anonymisées, sans compte |
+| GET | `/notifications` | Alertes de reclassement du compte |
+| POST | `/notifications/{id}/read` | Marquer une alerte comme lue |
 
 Le type de contenu (lien, Wi-Fi, e-mail, téléphone, contact...) est détecté par le serveur. Pour un lien, la réponse de `POST /scans` contient aussi le résultat de l'analyse de sécurité : verdict, score, URL finale, chaîne de redirections et liste des raisons.
 
@@ -222,6 +226,14 @@ python -m scripts.seed_demo            # ajoute les données fictives
 python -m scripts.seed_demo --clear    # les retire
 ```
 
+## Alertes
+
+Un lien peut devenir dangereux après avoir été scanné : une page de phishing est souvent mise en ligne d'abord, puis signalée plus tard. Le conteneur `worker` réanalyse donc régulièrement les liens déjà scannés, par petits lots pour respecter le quota de VirusTotal. Lorsqu'un lien passe de sûr ou suspect à dangereux, chaque personne qui l'a scanné reçoit une alerte, une seule fois par lien.
+
+L'alerte de zone fonctionne différemment, pour des raisons de vie privée. Le serveur ne reçoit jamais la position actuelle de l'utilisateur : l'application télécharge les zones publiques des sept derniers jours et calcule elle-même s'il y a au moins cinq signalements dans un rayon de cinq kilomètres. Cette alerte n'est pas répétée pendant une semaine.
+
+Les notifications à distance ont été retirées d'Expo Go sur Android depuis le SDK 53 : elles demandent une version compilée de l'application et un projet Firebase. Pour l'instant, l'application récupère donc les alertes lorsqu'elle est ouverte, puis les affiche sous forme de notifications locales. Elles n'arrivent pas tant qu'elle est fermée. Le passage à de vraies notifications à distance ne demanderait que d'envoyer depuis le serveur les alertes déjà créées.
+
 ## Application mobile
 
 L'application comporte cinq onglets : le scanner, l'historique, filtrable par verdict, la carte communautaire, les statistiques et le compte. La carte utilise Leaflet dans une WebView, comme le site : cela évite d'avoir à gérer une clé Google Maps. La bibliothèque est chargée avec une empreinte d'intégrité, et aucun lien ne peut s'ouvrir dans cette WebView. Après la connexion, elle s'ouvre directement sur la caméra. Une fois le QR code lu, il est envoyé au serveur et l'écran de résultat affiche le verdict avec un code couleur, le score, les raisons en clair et la chaîne de redirections. Le domaine de destination apparaît **en gros caractères**, car c'est l'information la plus utile pour repérer une arnaque et elle n'est pas toujours évidente à lire dans l'URL brute :
@@ -294,4 +306,7 @@ web/
 - [x] Comptes utilisateurs et affichage du résultat de l'analyse dans l'application
 - [x] Historique et statistiques personnelles dans l'application
 - [x] Carte communautaire (application et page web publique)
-- [ ] Notifications
+- [x] Reclassement automatique et alertes (notifications locales)
+- [ ] Notifications à distance (version compilée et Firebase)
+- [ ] Refresh tokens
+- [ ] Déploiement de l'API et de la page web

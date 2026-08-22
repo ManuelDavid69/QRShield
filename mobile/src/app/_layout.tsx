@@ -2,6 +2,7 @@ import { Stack } from "expo-router";
 import { View } from "react-native";
 
 import { colors } from "@/constants/colors";
+import { AlertsProvider } from "@/hooks/useAlerts";
 import { AuthProvider, useAuth } from "@/hooks/useAuth";
 
 function Navigator() {
@@ -38,7 +39,9 @@ function Navigator() {
 export default function RootLayout() {
   return (
     <AuthProvider>
-      <Navigator />
+      <AlertsProvider>
+        <Navigator />
+      </AlertsProvider>
     </AuthProvider>
   );
 }

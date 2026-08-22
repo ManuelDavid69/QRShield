@@ -61,6 +61,15 @@ export interface Zone {
   dangerous: number;
 }
 
+export interface AppNotification {
+  id: string;
+  title: string;
+  body: string;
+  scan_id: string | null;
+  created_at: string;
+  read: boolean;
+}
+
 export interface Account {
   id: string;
   email: string;
@@ -175,8 +184,16 @@ export async function reportScan(token: string, id: string): Promise<void> {
 }
 
 // Route publique : la carte ne dépend pas du compte
-export function getZones(): Promise<{ zones: Zone[]; period_days: number }> {
-  return request("/community/zones", {});
+export function getZones(days = 90): Promise<{ zones: Zone[]; period_days: number }> {
+  return request(`/community/zones?days=${days}`, {});
+}
+
+export function getNotifications(token: string): Promise<{ items: AppNotification[]; unread: number }> {
+  return request("/notifications", { headers: authHeader(token) });
+}
+
+export async function markNotificationRead(token: string, id: string): Promise<void> {
+  await request(`/notifications/${encodeURIComponent(id)}/read`, { method: "POST", headers: authHeader(token) });
 }
 
 export function getStats(token: string): Promise<UserStats> {

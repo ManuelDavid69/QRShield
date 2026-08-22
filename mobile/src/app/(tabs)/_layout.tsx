@@ -4,6 +4,7 @@ import type { ComponentProps } from "react";
 import type { ColorValue } from "react-native";
 
 import { colors } from "@/constants/colors";
+import { useAlerts } from "@/hooks/useAlerts";
 
 type IconName = ComponentProps<typeof Ionicons>["name"];
 
@@ -14,6 +15,8 @@ function tabIcon(name: IconName) {
 }
 
 export default function TabsLayout() {
+  const { unread } = useAlerts();
+
   return (
     <Tabs
       screenOptions={{
@@ -33,7 +36,14 @@ export default function TabsLayout() {
       <Tabs.Screen name="history" options={{ title: "Historique", tabBarIcon: tabIcon("time-outline") }} />
       <Tabs.Screen name="map" options={{ title: "Carte communautaire", tabBarLabel: "Carte", tabBarIcon: tabIcon("map-outline") }} />
       <Tabs.Screen name="stats" options={{ title: "Statistiques", tabBarLabel: "Stats", tabBarIcon: tabIcon("stats-chart-outline") }} />
-      <Tabs.Screen name="account" options={{ title: "Compte", tabBarIcon: tabIcon("person-outline") }} />
+      <Tabs.Screen
+        name="account"
+        options={{
+          title: "Compte",
+          tabBarIcon: tabIcon("person-outline"),
+          tabBarBadge: unread > 0 ? unread : undefined,
+        }}
+      />
     </Tabs>
   );
 }

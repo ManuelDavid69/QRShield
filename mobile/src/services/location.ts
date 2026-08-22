@@ -15,12 +15,12 @@ async function currentPosition(): Promise<Location.LocationObject | null> {
 }
 
 // La position est facultative : un refus ou un GPS lent ne doit jamais bloquer l'analyse
-export async function getScanPosition(): Promise<ScanPosition | null> {
+export async function getScanPosition({ ask = true } = {}): Promise<ScanPosition | null> {
   try {
     const permission = await Location.getForegroundPermissionsAsync();
     const granted =
       permission.granted ||
-      (permission.canAskAgain && (await Location.requestForegroundPermissionsAsync()).granted);
+      (ask && permission.canAskAgain && (await Location.requestForegroundPermissionsAsync()).granted);
     if (!granted) return null;
 
     const position =

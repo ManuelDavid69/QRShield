@@ -10,6 +10,14 @@ export async function saveToken(token: string): Promise<void> {
   window.localStorage.setItem(TOKEN_KEY, token);
 }
 
+export async function loadValue(key: string): Promise<string | null> {
+  return window.localStorage.getItem(key);
+}
+
+export async function saveValue(key: string, value: string): Promise<void> {
+  window.localStorage.setItem(key, value);
+}
+
 export async function deleteToken(): Promise<void> {
   window.localStorage.removeItem(TOKEN_KEY);
 }

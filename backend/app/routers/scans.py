@@ -122,7 +122,7 @@ def report_scan(
 ) -> None:
     scan = _get_owned_scan(db, scan_id, current)
     if scan.analysis is None:
-        raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "Seuls les liens peuvent être signalés")
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, "Seuls les liens peuvent être signalés")
     record_user_report(db, scan)
     db.commit()
 

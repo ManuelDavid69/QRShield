@@ -177,8 +177,8 @@ def community_signals(db: Session, domain: str | None, analysis_id: uuid.UUID) -
     return signals
 
 
-def _period_start() -> date:
-    return datetime.now(UTC).date() - timedelta(days=PERIOD_DAYS)
+def _period_start(days: int = PERIOD_DAYS) -> date:
+    return datetime.now(UTC).date() - timedelta(days=days)
 
 
 _ZONES_SQL = text("""
@@ -195,10 +195,10 @@ _ZONES_SQL = text("""
 """)
 
 
-def _zones(db: Session, limit: int) -> list[ZoneOut]:
+def _zones(db: Session, limit: int, days: int = PERIOD_DAYS) -> list[ZoneOut]:
     rows = db.execute(
         _ZONES_SQL,
-        {"since": _period_start(), "min_reports": MIN_REPORTS_PER_ZONE, "limit": limit},
+        {"since": _period_start(days), "min_reports": MIN_REPORTS_PER_ZONE, "limit": limit},
     ).all()
     return [
         ZoneOut(latitude=r.latitude, longitude=r.longitude, reports=r.reports, dangerous=r.dangerous)
@@ -206,8 +206,8 @@ def _zones(db: Session, limit: int) -> list[ZoneOut]:
     ]
 
 
-def public_zones(db: Session) -> ZoneList:
-    return ZoneList(zones=_zones(db, MAX_ZONES), period_days=PERIOD_DAYS)
+def public_zones(db: Session, days: int = PERIOD_DAYS) -> ZoneList:
+    return ZoneList(zones=_zones(db, MAX_ZONES, days), period_days=days)
 
 
 def public_stats(db: Session) -> CommunityStats:

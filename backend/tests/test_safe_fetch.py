@@ -1,5 +1,7 @@
 """Tests du client HTTP qui suit les redirections sans jamais toucher au réseau."""
 
+from collections.abc import Callable
+
 import httpx
 import pytest
 
@@ -8,7 +10,7 @@ from app.services.analysis.safe_fetch import FetchError, SafeFetcher, is_public_
 PUBLIC_IP = "93.184.216.34"
 
 
-def make_fetcher(dns: dict[str, list[str]], handler: httpx.MockTransportHandle) -> SafeFetcher:
+def make_fetcher(dns: dict[str, list[str]], handler: Callable[[httpx.Request], httpx.Response]) -> SafeFetcher:
     return SafeFetcher(resolver=lambda host, port: dns[host], transport=httpx.MockTransport(handler))
 
 

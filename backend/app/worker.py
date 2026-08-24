@@ -9,6 +9,8 @@ from app.services.qr_analyzer import get_url_analyzer
 from app.services.reclassification import reclassify_batch
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
+# httpx écrit chaque URL en INFO : un lien scanné n'a pas sa place dans les journaux
+logging.getLogger("httpx").setLevel(logging.WARNING)
 logger = logging.getLogger("worker")
 
 # VirusTotal autorise 4 requêtes par minute dans sa version gratuite

@@ -16,3 +16,7 @@ export async function showNotification(title: string, body: string): Promise<voi
 export function onNotificationOpened(): () => void {
   return () => undefined;
 }
+
+export function consumeOpenedNotification(): string | null {
+  return null;
+}

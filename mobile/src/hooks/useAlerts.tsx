@@ -14,7 +14,12 @@ import { AppState } from "react-native";
 import { useAuth } from "@/hooks/useAuth";
 import { getNotifications, getZones, markNotificationRead, type AppNotification } from "@/services/api";
 import { getScanPosition } from "@/services/location";
-import { onNotificationOpened, requestNotificationPermission, showNotification } from "@/services/notifications";
+import {
+  consumeOpenedNotification,
+  onNotificationOpened,
+  requestNotificationPermission,
+  showNotification,
+} from "@/services/notifications";
 import { loadValue, saveValue } from "@/services/tokenStorage";
 import { reportsNearby, shouldAlert } from "@/utils/zoneAlert";
 
@@ -92,14 +97,21 @@ export function AlertsProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (token === null) return;
 
+    const openScan = (scanId: string) => router.push({ pathname: "/scan/[id]", params: { id: scanId } });
+    const openPending = () => {
+      const scanId = consumeOpenedNotification();
+      if (scanId !== null) openScan(scanId);
+    };
+
     void requestNotificationPermission().then(refresh);
+    openPending();
     const timer = setInterval(() => void refresh(), REFRESH_MS);
     const subscription = AppState.addEventListener("change", (state) => {
-      if (state === "active") void refresh();
+      if (state !== "active") return;
+      void refresh();
+      openPending();
     });
-    const stopListening = onNotificationOpened((scanId) => {
-      router.push({ pathname: "/scan/[id]", params: { id: scanId } });
-    });
+    const stopListening = onNotificationOpened(openScan);
 
     return () => {
       clearInterval(timer);

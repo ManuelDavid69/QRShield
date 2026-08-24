@@ -24,10 +24,23 @@ export async function showNotification(title: string, body: string, scanId?: str
   });
 }
 
+function scanIdOf(response: Notifications.NotificationResponse): string | null {
+  const scanId = response.notification.request.content.data?.scanId;
+  return typeof scanId === "string" ? scanId : null;
+}
+
 export function onNotificationOpened(handler: (scanId: string) => void): () => void {
   const subscription = Notifications.addNotificationResponseReceivedListener((response) => {
-    const scanId = response.notification.request.content.data?.scanId;
-    if (typeof scanId === "string") handler(scanId);
+    const scanId = scanIdOf(response);
+    if (scanId !== null) handler(scanId);
   });
   return () => subscription.remove();
+}
+
+// L'écouteur ne voit pas un appui fait quand l'application était fermée : on le relit au retour
+export function consumeOpenedNotification(): string | null {
+  const response = Notifications.getLastNotificationResponse();
+  if (!response) return null;
+  Notifications.clearLastNotificationResponse();
+  return scanIdOf(response);
 }

@@ -97,6 +97,17 @@ test.describe.serial("Parcours complet dans l'application", () => {
     await expect(tab("Historique").first()).toBeVisible();
   });
 
+  test("jeton d'accès expiré : la session se renouvelle sans se reconnecter", async () => {
+    const before = await page.evaluate(() => window.localStorage.getItem("qrshield.refresh_token"));
+    await page.evaluate(() => window.localStorage.setItem("qrshield.access_token", "jeton-expire"));
+    await page.reload();
+    await tab("Compte").first().click();
+    await expect(page.getByText(email)).toBeVisible();
+    const after = await page.evaluate(() => window.localStorage.getItem("qrshield.refresh_token"));
+    expect(after).not.toBe(before);
+    expect(await token()).not.toBe("jeton-expire");
+  });
+
   test("lien sûr : verdict vert, position arrondie à 100 mètres", async () => {
     const sent = page.waitForRequest((request: Request) => request.url().endsWith("/scans") && request.method() === "POST");
     await scan(QR.safe);

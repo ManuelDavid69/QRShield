@@ -1,5 +1,7 @@
 import Constants from "expo-constants";
 
+import { loadRefreshToken, saveTokens } from "@/services/tokenStorage";
+
 export type Verdict = "unknown" | "safe" | "suspicious" | "dangerous";
 export type Severity = "info" | "low" | "medium" | "high" | "critical";
 export type ScanCategory = "website" | "menu" | "payment" | "wifi" | "other";
@@ -110,7 +112,47 @@ export function errorMessage(status: number, body: unknown): string {
   return typeof detail === "string" ? detail : "Le serveur a renvoyé une erreur.";
 }
 
-async function request<T>(path: string, init: RequestInit): Promise<T> {
+interface TokenPair {
+  access_token: string;
+  refresh_token: string;
+}
+
+let sessionListener: (accessToken: string) => void = () => undefined;
+let refreshing: Promise<string | null> | null = null;
+
+export function onSessionRefreshed(listener: (accessToken: string) => void): void {
+  sessionListener = listener;
+}
+
+async function renewSession(): Promise<string | null> {
+  const refreshToken = await loadRefreshToken();
+  if (refreshToken === null) return null;
+  try {
+    const pair = await request<TokenPair>("/auth/refresh", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ refresh_token: refreshToken }),
+    });
+    await saveTokens(pair.access_token, pair.refresh_token);
+    sessionListener(pair.access_token);
+    return pair.access_token;
+  } catch (error) {
+    // Hors connexion, la session reste valable : seul un refus du serveur y met fin
+    if (error instanceof ApiError && error.status === 401) return null;
+    throw error;
+  }
+}
+
+// Un jeton déjà utilisé coupe la session : plusieurs requêtes refusées en même temps
+// doivent donc partager un seul renouvellement
+function renewOnce(): Promise<string | null> {
+  refreshing ??= renewSession().finally(() => {
+    refreshing = null;
+  });
+  return refreshing;
+}
+
+async function request<T>(path: string, init: RequestInit, canRenew = true): Promise<T> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
   let response: Response;
@@ -122,20 +164,35 @@ async function request<T>(path: string, init: RequestInit): Promise<T> {
     clearTimeout(timer);
   }
 
+  const headers = init.headers as Record<string, string> | undefined;
+  if (response.status === 401 && canRenew && headers?.Authorization) {
+    const accessToken = await renewOnce();
+    if (accessToken !== null) {
+      return request<T>(path, { ...init, headers: { ...headers, Authorization: `Bearer ${accessToken}` } }, false);
+    }
+  }
+
   const body: unknown = await response.json().catch(() => null);
   if (!response.ok) throw new ApiError(response.status, errorMessage(response.status, body));
   return body as T;
 }
 
-export async function login(email: string, password: string): Promise<string> {
+export async function login(email: string, password: string): Promise<TokenPair> {
   // OAuth2 impose un formulaire urlencoded, pas du JSON
   const form = new URLSearchParams({ username: email, password }).toString();
-  const { access_token } = await request<{ access_token: string }>("/auth/login", {
+  return request<TokenPair>("/auth/login", {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: form,
   });
-  return access_token;
+}
+
+export async function logout(refreshToken: string): Promise<void> {
+  await request("/auth/logout", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ refresh_token: refreshToken }),
+  });
 }
 
 export async function register(email: string, password: string): Promise<void> {

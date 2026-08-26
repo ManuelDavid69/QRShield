@@ -1,6 +1,6 @@
 import { expect, test, type APIRequestContext } from "@playwright/test";
 
-import { apiContext, communityTotal, createAccount, deleteAllScans, QR, uniqueEmail } from "./helpers";
+import { apiContext, communityTotal, createAccount, deleteAllScans, PASSWORD, QR, uniqueEmail } from "./helpers";
 
 test.describe.serial("API sur la vraie pile Docker", () => {
   let token: string;
@@ -59,6 +59,22 @@ test.describe.serial("API sur la vraie pile Docker", () => {
         expect(text).not.toContain(forbidden);
       }
     }
+    await anonymous.dispose();
+  });
+
+  test("un refresh token volé puis rejoué coupe la session", async () => {
+    const email = uniqueEmail("session");
+    const anonymous = await apiContext();
+    await anonymous.post("/auth/register", { data: { email, password: PASSWORD } });
+    const login = await (await anonymous.post("/auth/login", { form: { username: email, password: PASSWORD } })).json();
+    const refresh = (refresh_token: string) => anonymous.post("/auth/refresh", { data: { refresh_token } });
+
+    const renewed = await refresh(login.refresh_token);
+    expect(renewed.status()).toBe(200);
+    const { refresh_token: latest } = await renewed.json();
+
+    expect((await refresh(login.refresh_token)).status()).toBe(401);
+    expect((await refresh(latest)).status()).toBe(401);
     await anonymous.dispose();
   });
 

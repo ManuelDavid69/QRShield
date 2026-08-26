@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 
-import { login, register } from "@/services/api";
-import { deleteToken, loadToken, saveToken } from "@/services/tokenStorage";
+import { login, logout, onSessionRefreshed, register } from "@/services/api";
+import { deleteTokens, loadRefreshToken, loadToken, saveTokens } from "@/services/tokenStorage";
 
 interface AuthState {
   token: string | null;
@@ -19,6 +19,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
+    onSessionRefreshed(setToken);
     loadToken()
       .then(setToken)
       .catch(() => setToken(null))
@@ -26,9 +27,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signIn = useCallback(async (email: string, password: string) => {
-    const accessToken = await login(email, password);
-    await saveToken(accessToken);
-    setToken(accessToken);
+    const tokens = await login(email, password);
+    await saveTokens(tokens.access_token, tokens.refresh_token);
+    setToken(tokens.access_token);
   }, []);
 
   const signUp = useCallback(
@@ -40,8 +41,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const signOut = useCallback(async () => {
-    await deleteToken();
+    const refreshToken = await loadRefreshToken();
+    await deleteTokens();
     setToken(null);
+    // Coupe aussi la session côté serveur ; sans réseau, le jeton expirera tout seul
+    if (refreshToken !== null) void logout(refreshToken).catch(() => undefined);
   }, []);
 
   const value = useMemo(

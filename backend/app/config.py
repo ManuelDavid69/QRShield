@@ -23,7 +23,9 @@ class Settings(BaseSettings):
     jwt_algorithm: str = "HS256"
     # Clé des empreintes de signalement : sans elle, impossible de les relier à un compte
     community_secret: str = Field(min_length=32)
-    access_token_expire_minutes: int = 60
+    # Court : le jeton d'accès n'est pas révocable, contrairement au refresh token
+    access_token_expire_minutes: int = 15
+    refresh_token_expire_days: int = 30
 
     model_config = SettingsConfigDict(env_file=("../.env", ".env"), extra="ignore")
 

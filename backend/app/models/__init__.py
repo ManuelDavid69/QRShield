@@ -2,6 +2,7 @@
 from app.database import Base
 from app.models.community_report import CommunityReport
 from app.models.notification import Notification
+from app.models.refresh_token import RefreshToken
 from app.models.enums import ContentType, ReportSource, ScanCategory, ThreatType, Verdict
 from app.models.url_analysis import UrlAnalysis
 from app.models.user import User
@@ -15,6 +16,7 @@ __all__ = [
     "ReportSource",
     "CommunityReport",
     "Notification",
+    "RefreshToken",
     "Verdict",
     "User",
     "UrlAnalysis",

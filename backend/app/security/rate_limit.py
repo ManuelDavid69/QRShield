@@ -62,5 +62,6 @@ login_limiter = RateLimiter(limit=10, window_seconds=60)
 register_limiter = RateLimiter(limit=10, window_seconds=3600)
 public_limiter = RateLimiter(limit=60, window_seconds=60)
 report_limiter = RateLimiter(limit=20, window_seconds=3600)
+refresh_limiter = RateLimiter(limit=30, window_seconds=60)
 
-ALL_LIMITERS = (login_limiter, register_limiter, public_limiter, report_limiter)
+ALL_LIMITERS = (login_limiter, register_limiter, public_limiter, report_limiter, refresh_limiter)

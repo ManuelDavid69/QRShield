@@ -5,6 +5,7 @@ import time
 
 from app.config import get_settings
 from app.database import SessionLocal
+from app.security.refresh_tokens import purge_expired_tokens
 from app.services.qr_analyzer import get_url_analyzer
 from app.services.reclassification import reclassify_batch
 
@@ -34,6 +35,8 @@ def main() -> None:
     while True:
         try:
             logger.info("%d liens réanalysés", run_once())
+            with SessionLocal() as db:
+                logger.info("%d sessions expirées supprimées", purge_expired_tokens(db))
         except Exception:
             # Une panne passagère (base, réseau) ne doit pas arrêter le service
             logger.exception("échec de la réanalyse")

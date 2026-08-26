@@ -121,6 +121,8 @@ La documentation complète est disponible sur `/docs`. Routes actuelles :
 |---|---|---|
 | POST | `/auth/register` | Créer un compte |
 | POST | `/auth/login` | Obtenir un token JWT |
+| POST | `/auth/refresh` | Renouveler la session |
+| POST | `/auth/logout` | Révoquer la session |
 | GET | `/auth/me` | Informations du compte connecté |
 | POST | `/scans` | Enregistrer un QR code scanné, avec une position GPS facultative |
 | GET | `/scans` | Historique paginé, avec un filtre facultatif sur le verdict |
@@ -255,6 +257,7 @@ Les tests sur téléphone ont révélé un second problème : sur Android, `expo
 - Le conteneur de l'API ne tourne pas en root et PostgreSQL n'est exposé que sur `127.0.0.1`.
 - En cas d'erreur de base de données, l'API ne renvoie jamais le message d'erreur brut, qui pourrait donner des informations sur l'infrastructure.
 - Les mots de passe sont hachés avec Argon2id, et hachés de nouveau à la connexion si les paramètres recommandés évoluent.
+- Le jeton d'accès ne dure que 15 minutes, car un JWT ne peut pas être révoqué. La session se renouvelle grâce à un refresh token valable 30 jours, à usage unique et stocké en base sous forme de hash. Si un jeton déjà utilisé est présenté, il a forcément été copié : toute la session est coupée, et l'utilisateur doit se reconnecter.
 - Les tokens JWT sont signés en HS256 avec une clé d'au moins 32 caractères. L'algorithme accepté est imposé par le serveur : un token forgé avec `alg: none` est donc refusé (un test le vérifie).
 - À la connexion, le mot de passe est vérifié même lorsque l'e-mail n'existe pas, en le comparant à un hash factice. Sans cette précaution, la réponse serait plus rapide pour un e-mail inconnu et il serait possible de deviner quels comptes existent en mesurant le temps de réponse.
 - Les QR codes Wi-Fi contiennent le mot de passe du réseau en clair (`WIFI:S:MaBox;P:motdepasse;;`). Il est masqué avant l'enregistrement et n'est jamais stocké en base.
@@ -265,7 +268,7 @@ Les tests sur téléphone ont révélé un second problème : sur Android, `expo
 - Le nombre de tentatives de connexion est limité par adresse IP et par compte, ce qui freine le test de mots de passe.
 - La page web est servie par nginx sans droits root, avec une politique de sécurité du contenu (CSP).
 
-Il reste à ajouter les refresh tokens : pour l'instant, il faut se reconnecter au bout d'une heure. La limitation de débit est conservée en mémoire, ce qui suffit pour un seul processus ; avec plusieurs instances de l'API, il faudrait un compteur partagé comme Redis. En développement, l'application communique avec l'API en HTTP sur le réseau local ; un déploiement réel devra passer en HTTPS.
+La limitation de débit est conservée en mémoire, ce qui suffit pour un seul processus ; avec plusieurs instances de l'API, il faudrait un compteur partagé comme Redis. En développement, l'application communique avec l'API en HTTP sur le réseau local ; un déploiement réel devra passer en HTTPS.
 
 ## Organisation du code
 
@@ -308,5 +311,5 @@ web/
 - [x] Carte communautaire (application et page web publique)
 - [x] Reclassement automatique et alertes (notifications locales)
 - [ ] Notifications à distance (version compilée et Firebase)
-- [ ] Refresh tokens
+- [x] Sessions longues avec refresh tokens
 - [ ] Déploiement de l'API et de la page web

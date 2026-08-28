@@ -1,0 +1,359 @@
+{
+  "zones": {
+    "zones": [
+      {
+        "latitude": 48.86,
+        "longitude": 2.35,
+        "reports": 9,
+        "dangerous": 7
+      },
+      {
+        "latitude": 45.77,
+        "longitude": 4.84,
+        "reports": 5,
+        "dangerous": 3
+      },
+      {
+        "latitude": 48.86,
+        "longitude": 2.36,
+        "reports": 5,
+        "dangerous": 3
+      },
+      {
+        "latitude": 48.85,
+        "longitude": 2.36,
+        "reports": 5,
+        "dangerous": 4
+      },
+      {
+        "latitude": 43.3,
+        "longitude": 5.37,
+        "reports": 5,
+        "dangerous": 4
+      },
+      {
+        "latitude": 43.71,
+        "longitude": 7.26,
+        "reports": 5,
+        "dangerous": 2
+      },
+      {
+        "latitude": 45.76,
+        "longitude": 4.84,
+        "reports": 5,
+        "dangerous": 2
+      },
+      {
+        "latitude": 43.29,
+        "longitude": 5.37,
+        "reports": 4,
+        "dangerous": 3
+      },
+      {
+        "latitude": 45.76,
+        "longitude": 4.83,
+        "reports": 4,
+        "dangerous": 3
+      },
+      {
+        "latitude": 43.61,
+        "longitude": 1.44,
+        "reports": 4,
+        "dangerous": 2
+      },
+      {
+        "latitude": 48.58,
+        "longitude": 7.75,
+        "reports": 4,
+        "dangerous": 4
+      },
+      {
+        "latitude": 43.61,
+        "longitude": 1.43,
+        "reports": 3,
+        "dangerous": 2
+      },
+      {
+        "latitude": 43.61,
+        "longitude": 1.45,
+        "reports": 3,
+        "dangerous": 2
+      },
+      {
+        "latitude": 45.77,
+        "longitude": 4.83,
+        "reports": 3,
+        "dangerous": 2
+      },
+      {
+        "latitude": 45.76,
+        "longitude": 4.82,
+        "reports": 3,
+        "dangerous": 2
+      },
+      {
+        "latitude": 43.61,
+        "longitude": 3.87,
+        "reports": 3,
+        "dangerous": 2
+      },
+      {
+        "latitude": 43.3,
+        "longitude": 5.36,
+        "reports": 3,
+        "dangerous": 2
+      },
+      {
+        "latitude": 43.3,
+        "longitude": 5.38,
+        "reports": 3,
+        "dangerous": 1
+      },
+      {
+        "latitude": 48.85,
+        "longitude": 2.35,
+        "reports": 3,
+        "dangerous": 2
+      },
+      {
+        "latitude": 48.86,
+        "longitude": 2.34,
+        "reports": 3,
+        "dangerous": 1
+      },
+      {
+        "latitude": 47.22,
+        "longitude": -1.54,
+        "reports": 3,
+        "dangerous": 3
+      },
+      {
+        "latitude": 47.22,
+        "longitude": -1.56,
+        "reports": 3,
+        "dangerous": 3
+      },
+      {
+        "latitude": 44.84,
+        "longitude": -0.58,
+        "reports": 3,
+        "dangerous": 2
+      },
+      {
+        "latitude": 44.84,
+        "longitude": -0.59,
+        "reports": 3,
+        "dangerous": 2
+      },
+      {
+        "latitude": 44.83,
+        "longitude": -0.58,
+        "reports": 2,
+        "dangerous": 1
+      },
+      {
+        "latitude": 48.85,
+        "longitude": 2.34,
+        "reports": 2,
+        "dangerous": 2
+      },
+      {
+        "latitude": 44.84,
+        "longitude": -0.57,
+        "reports": 2,
+        "dangerous": 1
+      },
+      {
+        "latitude": 50.63,
+        "longitude": 3.07,
+        "reports": 2,
+        "dangerous": 2
+      },
+      {
+        "latitude": 50.63,
+        "longitude": 3.05,
+        "reports": 2,
+        "dangerous": 2
+      },
+      {
+        "latitude": 50.63,
+        "longitude": 3.04,
+        "reports": 2,
+        "dangerous": 2
+      },
+      {
+        "latitude": 48.11,
+        "longitude": -1.67,
+        "reports": 2,
+        "dangerous": 2
+      },
+      {
+        "latitude": 44.83,
+        "longitude": -0.59,
+        "reports": 2,
+        "dangerous": 2
+      },
+      {
+        "latitude": 43.71,
+        "longitude": 7.25,
+        "reports": 2,
+        "dangerous": 1
+      },
+      {
+        "latitude": 43.61,
+        "longitude": 3.89,
+        "reports": 2,
+        "dangerous": 1
+      },
+      {
+        "latitude": 48.87,
+        "longitude": 2.35,
+        "reports": 2,
+        "dangerous": 1
+      },
+      {
+        "latitude": 45.19,
+        "longitude": 5.73,
+        "reports": 2,
+        "dangerous": 1
+      },
+      {
+        "latitude": 45.76,
+        "longitude": 4.85,
+        "reports": 2,
+        "dangerous": 1
+      },
+      {
+        "latitude": 45.77,
+        "longitude": 4.85,
+        "reports": 2,
+        "dangerous": 2
+      }
+    ],
+    "period_days": 90
+  },
+  "stats": {
+    "period_days": 90,
+    "total_reports": 167,
+    "dangerous_reports": 117,
+    "zones": 38,
+    "threats": [
+      {
+        "threat": "phishing",
+        "count": 135
+      },
+      {
+        "threat": "other",
+        "count": 22
+      },
+      {
+        "threat": "malware",
+        "count": 10
+      }
+    ],
+    "weekly": [
+      {
+        "week_start": "2026-08-10",
+        "count": 7
+      },
+      {
+        "week_start": "2026-08-17",
+        "count": 14
+      },
+      {
+        "week_start": "2026-08-24",
+        "count": 15
+      },
+      {
+        "week_start": "2026-08-31",
+        "count": 13
+      },
+      {
+        "week_start": "2026-09-07",
+        "count": 15
+      },
+      {
+        "week_start": "2026-09-14",
+        "count": 8
+      },
+      {
+        "week_start": "2026-09-21",
+        "count": 17
+      },
+      {
+        "week_start": "2026-09-28",
+        "count": 16
+      },
+      {
+        "week_start": "2026-10-05",
+        "count": 16
+      },
+      {
+        "week_start": "2026-10-12",
+        "count": 12
+      },
+      {
+        "week_start": "2026-10-19",
+        "count": 19
+      },
+      {
+        "week_start": "2026-10-26",
+        "count": 15
+      }
+    ],
+    "top_domains": [
+      {
+        "domain": "paiement-parking-lyon.example",
+        "reports": 51
+      },
+      {
+        "domain": "horodateur-amende.example",
+        "reports": 30
+      },
+      {
+        "domain": "suivi-colis-livraison.example",
+        "reports": 28
+      },
+      {
+        "domain": "ameli-remboursement.example",
+        "reports": 26
+      },
+      {
+        "domain": "menu-restaurant-promo.example",
+        "reports": 14
+      }
+    ],
+    "top_zones": [
+      {
+        "latitude": 48.86,
+        "longitude": 2.35,
+        "reports": 9,
+        "dangerous": 7
+      },
+      {
+        "latitude": 45.77,
+        "longitude": 4.84,
+        "reports": 5,
+        "dangerous": 3
+      },
+      {
+        "latitude": 48.86,
+        "longitude": 2.36,
+        "reports": 5,
+        "dangerous": 3
+      },
+      {
+        "latitude": 48.85,
+        "longitude": 2.36,
+        "reports": 5,
+        "dangerous": 4
+      },
+      {
+        "latitude": 43.3,
+        "longitude": 5.37,
+        "reports": 5,
+        "dangerous": 4
+      }
+    ]
+  }
+}

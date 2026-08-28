@@ -228,6 +228,8 @@ python -m scripts.seed_demo            # ajoute les données fictives
 python -m scripts.seed_demo --clear    # les retire
 ```
 
+Une version statique de cette page est publiée sur GitHub Pages. Elle ne dépend d'aucun serveur : `web/scripts/export-demo.mjs` copie les données de l'API dans `web/public/demo-data.json`, et refuse de le faire si un domaine n'est pas fictif, puisque ce fichier est public. La page lit ensuite ce fichier lorsqu'elle est compilée avec `VITE_STATIC_DEMO=true`. Le déploiement est automatique à chaque modification de `web/`.
+
 ## Alertes
 
 Un lien peut devenir dangereux après avoir été scanné : une page de phishing est souvent mise en ligne d'abord, puis signalée plus tard. Le conteneur `worker` réanalyse donc régulièrement les liens déjà scannés, par petits lots pour respecter le quota de VirusTotal. Lorsqu'un lien passe de sûr ou suspect à dangereux, chaque personne qui l'a scanné reçoit une alerte, une seule fois par lien.
@@ -312,4 +314,5 @@ web/
 - [x] Reclassement automatique et alertes (notifications locales)
 - [ ] Notifications à distance (version compilée et Firebase)
 - [x] Sessions longues avec refresh tokens
-- [ ] Déploiement de l'API et de la page web
+- [x] Page de démonstration statique sur GitHub Pages
+- [ ] Déploiement de l'API

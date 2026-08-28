@@ -24,19 +24,35 @@ export interface CommunityStats {
 }
 
 const API_URL = import.meta.env.VITE_API_URL ?? "http://127.0.0.1:8000";
+// Version publiée sur GitHub Pages : pas de serveur, les données viennent d'un fichier
+const STATIC_DEMO = import.meta.env.VITE_STATIC_DEMO === "true";
 
-async function getJson<T>(path: string): Promise<T> {
-  const response = await fetch(`${API_URL}${path}`);
+interface Snapshot {
+  zones: ZoneList;
+  stats: CommunityStats;
+}
+
+let snapshot: Promise<Snapshot> | null = null;
+
+function loadSnapshot(): Promise<Snapshot> {
+  snapshot ??= getJson<Snapshot>(`${import.meta.env.BASE_URL}demo-data.json`);
+  return snapshot;
+}
+
+async function getJson<T>(url: string): Promise<T> {
+  const response = await fetch(url);
   if (!response.ok) {
-    throw new Error(`Requête refusée (${response.status}) sur ${path}`);
+    throw new Error(`Requête refusée (${response.status}) sur ${url}`);
   }
   return (await response.json()) as T;
 }
 
-export function fetchZones(): Promise<ZoneList> {
-  return getJson<ZoneList>("/community/zones");
+export async function fetchZones(): Promise<ZoneList> {
+  if (STATIC_DEMO) return (await loadSnapshot()).zones;
+  return getJson<ZoneList>(`${API_URL}/community/zones`);
 }
 
-export function fetchStats(): Promise<CommunityStats> {
-  return getJson<CommunityStats>("/community/stats");
+export async function fetchStats(): Promise<CommunityStats> {
+  if (STATIC_DEMO) return (await loadSnapshot()).stats;
+  return getJson<CommunityStats>(`${API_URL}/community/stats`);
 }

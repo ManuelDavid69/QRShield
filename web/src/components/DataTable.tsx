@@ -10,17 +10,17 @@ export default function DataTable({ zones }: DataTableProps) {
 
   return (
     <details className="data-table">
-      <summary>Voir les données sous forme de tableau</summary>
+      <summary>Show the data as a table</summary>
       <div className="table-wrap">
         <table>
           <thead>
             <tr>
-              <th scope="col">Ville</th>
+              <th scope="col">City</th>
               <th scope="col" className="num">
-                Signalements
+                Reports
               </th>
               <th scope="col" className="num">
-                Dont dangereux
+                Dangerous
               </th>
             </tr>
           </thead>
@@ -28,8 +28,8 @@ export default function DataTable({ zones }: DataTableProps) {
             {rows.map((zone) => (
               <tr key={`${zone.latitude}-${zone.longitude}`}>
                 <td>{nearestCity(zone.latitude, zone.longitude)}</td>
-                <td className="num">{zone.reports.toLocaleString("fr-FR")}</td>
-                <td className="num">{zone.dangerous.toLocaleString("fr-FR")}</td>
+                <td className="num">{zone.reports.toLocaleString("en-US")}</td>
+                <td className="num">{zone.dangerous.toLocaleString("en-US")}</td>
               </tr>
             ))}
           </tbody>

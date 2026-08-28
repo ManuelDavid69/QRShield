@@ -15,8 +15,8 @@ test.describe("Page web publique", () => {
     await api.dispose();
 
     await page.goto("/");
-    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Les QR codes piégés signalés en France");
-    await expect(page.getByText("les chiffres affichés sont fictifs", { exact: false })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1 })).toContainText("fake QR code");
+    await expect(page.getByText("the numbers below are made up", { exact: false })).toBeVisible();
 
     const figures = page.locator(".figure-value");
     await expect(figures.nth(0)).toHaveText(String(stats.total_reports));
@@ -42,12 +42,12 @@ test.describe("Page web publique", () => {
 
     const circle = page.locator("path.leaflet-interactive").first();
     await circle.dispatchEvent("mouseover");
-    await expect(page.locator(".leaflet-tooltip")).toContainText("signalements, dont");
+    await expect(page.locator(".leaflet-tooltip")).toContainText("reports,");
   });
 
   test("le tableau remplace la carte pour qui ne peut pas la lire", async ({ page }) => {
     await page.goto("/");
-    await page.getByText("Voir les données sous forme de tableau").click();
+    await page.getByText("Show the data as a table").click();
     await expect(page.locator("table tbody tr").first()).toBeVisible();
   });
 
@@ -56,7 +56,7 @@ test.describe("Page web publique", () => {
     const bars = page.locator(".recharts-bar-rectangle");
     await expect(bars.first()).toBeVisible();
     await bars.nth(3).hover();
-    await expect(page.getByText("Semaine du", { exact: false })).toBeVisible();
+    await expect(page.getByText("Week of", { exact: false })).toBeVisible();
   });
 
   test("aucun défilement horizontal sur téléphone", async ({ page }) => {

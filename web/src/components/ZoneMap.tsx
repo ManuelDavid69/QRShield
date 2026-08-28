@@ -23,7 +23,7 @@ export default function ZoneMap({ zones }: ZoneMapProps) {
     const map = L.map(container, { scrollWheelZoom: false }).setView(FRANCE_CENTER, INITIAL_ZOOM);
 
     L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">contributeurs OpenStreetMap</a>',
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>',
       maxZoom: 14,
     }).addTo(map);
 
@@ -51,13 +51,13 @@ export default function ZoneMap({ zones }: ZoneMapProps) {
 
       L.circleMarker([zone.latitude, zone.longitude], {
         radius,
-        color: "#ffffff",
+        color: "#fffdf8",
         weight: 2,
         fillOpacity: 0.75,
-        fillColor: mostlyDangerous ? "#dc2626" : "#d97706",
+        fillColor: mostlyDangerous ? "#c8321e" : "#d9920f",
       })
         .bindTooltip(
-          `<strong>${city}</strong><br />${zone.reports} signalements, dont ${zone.dangerous} dangereux`,
+          `<strong>${city}</strong><br />${zone.reports} reports, ${zone.dangerous} dangerous`,
         )
         .addTo(layer);
     }
@@ -73,14 +73,14 @@ export default function ZoneMap({ zones }: ZoneMapProps) {
       <div className="map-legend">
         <span className="legend-item">
           <span className="legend-dot legend-dot-danger" aria-hidden="true" />
-          Majorité de liens dangereux
+          Mostly dangerous links
         </span>
         <span className="legend-item">
           <span className="legend-dot legend-dot-warning" aria-hidden="true" />
-          Majorité de liens suspects
+          Mostly suspicious links
         </span>
+        <span>A bigger circle means more reports.</span>
       </div>
-      <p className="map-note">La taille du cercle indique le nombre de signalements.</p>
-    </div>
+          </div>
   );
 }

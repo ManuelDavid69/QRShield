@@ -74,7 +74,7 @@ export function nearestCity(latitude: number, longitude: number): string {
   }
 
   if (bestDistance > MAX_DISTANCE_KM) {
-    return `Zone ${latitude.toFixed(2)}, ${longitude.toFixed(2)}`;
+    return `Area ${latitude.toFixed(2)}, ${longitude.toFixed(2)}`;
   }
   return bestName;
 }

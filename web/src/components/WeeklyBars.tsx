@@ -13,7 +13,7 @@ interface WeeklyTooltipProps {
 }
 
 function formatShortDate(isoDate: string): string {
-  return `${isoDate.slice(8, 10)}/${isoDate.slice(5, 7)}`;
+  return new Date(`${isoDate}T12:00:00`).toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
 function WeeklyTooltip({ active, payload }: WeeklyTooltipProps) {
@@ -24,9 +24,9 @@ function WeeklyTooltip({ active, payload }: WeeklyTooltipProps) {
 
   return (
     <div className="chart-tooltip">
-      <p>Semaine du {formatShortDate(point.week_start)}</p>
+      <p>Week of {formatShortDate(point.week_start)}</p>
       <p>
-        <strong>{point.count.toLocaleString("fr-FR")}</strong> signalements
+        <strong>{point.count.toLocaleString("en-US")}</strong> reports
       </p>
     </div>
   );
@@ -56,7 +56,7 @@ export default function WeeklyBars({ weekly }: WeeklyBarsProps) {
         <Bar
           dataKey="count"
           fill="var(--accent)"
-          radius={[4, 4, 0, 0]}
+          radius={[2, 2, 0, 0]}
           maxBarSize={28}
           isAnimationActive={false}
         />

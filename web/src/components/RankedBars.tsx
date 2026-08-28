@@ -6,22 +6,23 @@ interface RankedRow {
 interface RankedBarsProps {
   rows: RankedRow[];
   unit: string;
+  mono?: boolean;
 }
 
-export default function RankedBars({ rows, unit }: RankedBarsProps) {
+export default function RankedBars({ rows, unit, mono = false }: RankedBarsProps) {
   if (rows.length === 0) {
-    return <p className="empty">Aucune donnée disponible.</p>;
+    return <p className="empty">No data yet.</p>;
   }
 
   const maximum = rows.reduce((highest, row) => Math.max(highest, row.value), 0);
 
   return (
-    <ul className="ranked">
+    <ul className={mono ? "ranked ranked-mono" : "ranked"}>
       {rows.map((row) => (
         <li key={row.label} className="ranked-row" title={`${row.value} ${unit}`}>
           <div className="ranked-head">
             <span className="ranked-label">{row.label}</span>
-            <span className="ranked-value">{row.value.toLocaleString("fr-FR")}</span>
+            <span className="ranked-value">{row.value.toLocaleString("en-US")}</span>
           </div>
           <div className="ranked-track">
             <div

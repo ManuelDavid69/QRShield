@@ -1,23 +1,71 @@
 import { useEffect, useMemo, useState } from "react";
 import DataTable from "./components/DataTable";
 import RankedBars from "./components/RankedBars";
+import ScanExample from "./components/ScanExample";
 import WeeklyBars from "./components/WeeklyBars";
 import ZoneMap from "./components/ZoneMap";
 import { fetchStats, fetchZones } from "./services/api";
 import type { CommunityStats, ThreatType, Zone } from "./services/api";
 import { nearestCity } from "./utils/cities";
 
+const REPO_URL = "https://github.com/ManuelDavid69/QRShield";
+
 const THREAT_LABELS: Record<ThreatType, string> = {
-  phishing: "Hameçonnage",
-  malware: "Logiciels malveillants",
-  other: "Autres arnaques",
+  phishing: "Phishing",
+  malware: "Malware downloads",
+  other: "Other scams",
 };
 
 const EMPTY_ZONES: Zone[] = [];
 
+const STEPS = [
+  {
+    title: "Follow the link",
+    text: "The server follows every redirect to the real destination. It only reads headers, it never downloads the page.",
+  },
+  {
+    title: "Read the address",
+    text: "paypa1.com, amaz0n-livraison.fr, a Cyrillic а in apple.com, the @ trick. A lot of scams are visible in the URL itself.",
+  },
+  {
+    title: "Ask around",
+    text: "Google Safe Browsing, VirusTotal and the age of the domain. Scam sites are often only a few days old.",
+  },
+  {
+    title: "Give a verdict",
+    text: "Every clue has a weight and they add up to a score out of 100. You see each reason, and you decide what to do.",
+  },
+];
+
+const LESSONS = [
+  {
+    title: "The Wi-Fi password showed up in plain text",
+    text: "On Android, the camera library returns a reformatted version of Wi-Fi QR codes, without the WIFI: prefix. My unit tests used the raw text, so they all passed. I only saw it when I scanned a real code with my phone.",
+  },
+  {
+    title: "The camera kept running behind the other tabs",
+    text: "I had paused it with a prop that Android silently ignores. The flashlight stayed on when I changed tabs, and that is how I noticed. The camera could still read QR codes in the background, so it now closes for real.",
+  },
+  {
+    title: "A safe verdict could show up on the wrong link",
+    text: "If a new link arrived while a result was open, the screen kept the previous analysis. A phishing link ended up with a green verdict. It only happened through deep links, but that is exactly what an attacker would use.",
+  },
+];
+
+const PRIVACY = [
+  "A report has no account, no email and no link back to the scan.",
+  "Locations are snapped to a grid of about one kilometer.",
+  "A zone only appears once it has at least two reports.",
+  "Only the domain is kept, never the full link, and only the day, never the time.",
+];
+
 interface PageData {
   zones: Zone[];
   stats: CommunityStats;
+}
+
+function formatNumber(value: number): string {
+  return value.toLocaleString("en-US");
 }
 
 export default function App() {
@@ -76,95 +124,139 @@ export default function App() {
 
   return (
     <div className="page">
-      <header className="head">
-        <p className="eyebrow">QRShield</p>
-        <h1>Les QR codes piégés signalés en France</h1>
-        <p className="lead">
-          Un faux QR code collé sur un horodateur ou un menu suffit à voler une carte bancaire. Cette
-          carte rassemble, de façon anonyme, les liens dangereux repérés par les utilisateurs de
-          l’application QRShield.
-        </p>
-        <a
-          className="link"
-          href="https://github.com/ManuelDavid69/QRShield"
-          target="_blank"
-          rel="noreferrer"
-        >
-          Voir le code du projet
+      <nav className="topbar">
+        <span className="wordmark">QRShield</span>
+        <a href={REPO_URL} target="_blank" rel="noreferrer">
+          Source code on GitHub
         </a>
+      </nav>
+
+      <header className="hero">
+        <div className="hero-text">
+          <p className="kicker">A student security project</p>
+          <h1>Someone stuck a fake QR code on a parking meter. Would you have noticed?</h1>
+          <p className="lead">
+            I'm Manuel, a fourth-year computer science and networks student at CPE Lyon. We all scan
+            QR codes without thinking, so I built an app that checks where a code really leads
+            before you open it.
+          </p>
+        </div>
+        <ScanExample />
       </header>
 
       {showDemo && (
-        <p className="demo">
-          Démonstration : le projet n’a pas encore d’utilisateurs, les chiffres affichés sont fictifs.
+        <p className="note">
+          <strong>Heads-up:</strong> nobody uses the app yet, so the numbers below are made up. The
+          domains end in <code>.example</code> so that no real site gets accused.
         </p>
       )}
 
-      {failed && (
-        <p className="state state-error">Les données ne sont pas disponibles pour le moment.</p>
-      )}
-
-      {!failed && !stats && <p className="state">Chargement des données…</p>}
+      {failed && <p className="state">The data is not available right now.</p>}
+      {!failed && !stats && <p className="state">Loading the data…</p>}
 
       {stats && (
         <main>
-          <section className="figures" aria-label="Chiffres clés">
-            <div className="figure">
-              <span className="figure-value">{stats.total_reports.toLocaleString("fr-FR")}</span>
-              <span className="figure-label">signalements</span>
-            </div>
-            <div className="figure">
-              <span className="figure-value">{stats.dangerous_reports.toLocaleString("fr-FR")}</span>
-              <span className="figure-label">liens dangereux</span>
-            </div>
-            <div className="figure">
-              <span className="figure-value">{stats.zones.toLocaleString("fr-FR")}</span>
-              <span className="figure-label">zones touchées</span>
-            </div>
-            <p className="figures-period">sur les {stats.period_days} derniers jours</p>
+          <section className="figures" aria-label="Key figures">
+            <p>
+              <span className="figure-value">{formatNumber(stats.total_reports)}</span>
+              <span className="figure-label">reports</span>
+            </p>
+            <p>
+              <span className="figure-value">{formatNumber(stats.dangerous_reports)}</span>
+              <span className="figure-label">dangerous links</span>
+            </p>
+            <p>
+              <span className="figure-value">{formatNumber(stats.zones)}</span>
+              <span className="figure-label">areas</span>
+            </p>
+            <p className="figures-period">over the last {stats.period_days} days</p>
           </section>
 
           <section className="section">
-            <h2>Où ont-ils été signalés ?</h2>
+            <h2>
+              <span className="number">01</span> Where they were reported
+            </h2>
             <ZoneMap zones={zones} />
             <DataTable zones={zones} />
           </section>
 
-          <div className="grid">
-            <section className="card">
-              <h2>Signalements par semaine</h2>
-              <WeeklyBars weekly={stats.weekly} />
-            </section>
-            <section className="card">
-              <h2>Types de menaces</h2>
-              <RankedBars rows={threatRows} unit="signalements" />
-            </section>
-          </div>
-
-          <div className="grid">
-            <section className="card">
-              <h2>Villes les plus touchées</h2>
-              <RankedBars rows={cityRows} unit="signalements" />
-            </section>
-            <section className="card">
-              <h2>Domaines les plus signalés</h2>
-              <RankedBars rows={domainRows} unit="signalements" />
-            </section>
-          </div>
+          <section className="section">
+            <h2>
+              <span className="number">02</span> What the reports look like
+            </h2>
+            <div className="columns">
+              <div>
+                <h3>Reports per week</h3>
+                <WeeklyBars weekly={stats.weekly} />
+              </div>
+              <div>
+                <h3>Type of threat</h3>
+                <RankedBars rows={threatRows} unit="reports" />
+              </div>
+              <div>
+                <h3>Most affected cities</h3>
+                <RankedBars rows={cityRows} unit="reports" />
+              </div>
+              <div>
+                <h3>Most reported domains</h3>
+                <RankedBars rows={domainRows} unit="reports" mono />
+              </div>
+            </div>
+          </section>
 
           <section className="section">
-            <h2>Comment les données sont protégées</h2>
-            <ul className="protections">
-              <li>Aucun compte, e-mail ou identifiant n’est associé à un signalement.</li>
-              <li>La position est arrondie à une zone d’environ un kilomètre.</li>
-              <li>Une zone n’apparaît qu’à partir de deux signalements.</li>
-              <li>Seul le domaine est conservé, jamais l’adresse complète du lien.</li>
+            <h2>
+              <span className="number">03</span> What happens when you scan
+            </h2>
+            <ol className="steps">
+              {STEPS.map((step) => (
+                <li key={step.title}>
+                  <h3>{step.title}</h3>
+                  <p>{step.text}</p>
+                </li>
+              ))}
+            </ol>
+          </section>
+
+          <section className="section">
+            <h2>
+              <span className="number">04</span> How reports stay anonymous
+            </h2>
+            <p className="section-intro">
+              A public map can easily show where people go, so I designed the table to make that
+              impossible rather than promising not to look.
+            </p>
+            <ul className="checks">
+              {PRIVACY.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
             </ul>
+          </section>
+
+          <section className="section">
+            <h2>
+              <span className="number">05</span> Bugs only a real phone could find
+            </h2>
+            <p className="section-intro">
+              All the automated tests were green. These three showed up when I tested on my actual
+              phone, and they taught me more than the rest of the project.
+            </p>
+            <div className="lessons">
+              {LESSONS.map((lesson) => (
+                <article key={lesson.title}>
+                  <h3>{lesson.title}</h3>
+                  <p>{lesson.text}</p>
+                </article>
+              ))}
+            </div>
           </section>
         </main>
       )}
 
-      <footer className="footer">Projet personnel de Manuel David, étudiant à CPE Lyon.</footer>
+      <footer className="footer">
+        <p>Personal project by Manuel David, CPE Lyon.</p>
+        <p className="stack">FastAPI · PostgreSQL + PostGIS · React Native · React · Docker</p>
+      </footer>
     </div>
   );
 }

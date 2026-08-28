@@ -2,6 +2,8 @@
 
 Application mobile qui analyse le contenu d'un QR code avant de l'ouvrir.
 
+**[Voir la page de démonstration](https://manueldavid69.github.io/QRShield/)** (carte et statistiques, avec des données fictives)
+
 Je suis étudiant en 4e année du cycle ingénieur IRC (Informatique et Réseaux de Communication) à CPE Lyon. Je voulais un projet personnel orienté cybersécurité qui réponde à un problème concret. Les QR codes sont aujourd'hui partout : menus de restaurant, horodateurs, affiches, terminaux de paiement. On les scanne par réflexe, sans vérifier où ils mènent. Il suffit pourtant de coller un faux QR code sur celui d'un horodateur pour rediriger les gens vers une page de paiement frauduleuse. Cette technique, appelée *quishing*, a déjà fait plusieurs victimes en France.
 
 QRShield scanne le QR code, suit le lien jusqu'à sa destination réelle et indique s'il paraît sûr, suspect ou dangereux, en expliquant pourquoi. L'utilisateur décide ensuite lui-même d'ouvrir le lien ou non.

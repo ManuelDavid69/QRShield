@@ -1,70 +1,72 @@
 # QRShield
 
-Application mobile qui analyse le contenu d'un QR code avant de l'ouvrir.
+[Version française](README.fr.md)
 
-**[Voir la page de démonstration](https://manueldavid69.github.io/QRShield/)** (carte et statistiques, avec des données fictives)
+Mobile application that analyzes the content of a QR code before opening it.
 
-Je suis étudiant en 4e année du cycle ingénieur IRC (Informatique et Réseaux de Communication) à CPE Lyon. Je voulais un projet personnel orienté cybersécurité qui réponde à un problème concret. Les QR codes sont aujourd'hui partout : menus de restaurant, horodateurs, affiches, terminaux de paiement. On les scanne par réflexe, sans vérifier où ils mènent. Il suffit pourtant de coller un faux QR code sur celui d'un horodateur pour rediriger les gens vers une page de paiement frauduleuse. Cette technique, appelée *quishing*, a déjà fait plusieurs victimes en France.
+**[See the demo page](https://manueldavid69.github.io/QRShield/)** (map and statistics, with fictional data)
 
-QRShield scanne le QR code, suit le lien jusqu'à sa destination réelle et indique s'il paraît sûr, suspect ou dangereux, en expliquant pourquoi. L'utilisateur décide ensuite lui-même d'ouvrir le lien ou non.
+I am a fourth-year engineering student in Computer Science and Networks (IRC) at CPE Lyon. I wanted a personal project focused on cybersecurity that addressed a concrete problem. QR codes are everywhere today: restaurant menus, parking meters, posters, payment terminals. People scan them by reflex, without checking where they lead. Yet all it takes is placing a fake QR code over the one on a parking meter to redirect people to a fraudulent payment page. This technique, called *quishing*, has already claimed several victims in France.
 
-> Le projet est en cours de développement. L'état d'avancement est détaillé plus bas.
+QRShield scans the QR code, follows the link to its real destination, and indicates whether it looks safe, suspicious, or dangerous, explaining why. The user then decides whether to open the link or not.
 
-## Fonctionnalités prévues
+> The whole project runs locally, from the app to the server. Only the demo page is online for now. The current status is detailed below.
 
-- **Analyse de sécurité** : URL finale après les redirections, réputation du domaine (Google Safe Browsing, VirusTotal, PhishTank), détection du typosquatting (`paypa1.com`, `amaz0n-secure.fr`...), repérage des liens qui téléchargent directement un `.apk` ou un `.exe`, et score final sûr / suspect / dangereux.
-- **Historique et statistiques** : chaque scan est enregistré, et un écran de l'application présente les habitudes de l'utilisateur (scans par semaine, part de QR codes suspects, types de liens, lieux de scan).
-- **Volet communautaire** : les QR codes jugés dangereux sont remontés de façon anonymisée et affichés sur une carte, sur le principe de Waze. Ces signalements servent aussi à affiner le score. La carte est disponible dans l'application et sur une page web publique, accompagnée de statistiques globales.
-- **Alertes** : notification si un QR code déjà scanné est reclassé comme dangereux, ou si de nombreux signalements apparaissent à proximité.
+## Features
 
-## Choix techniques
+- **Security analysis**: final URL after redirects, domain reputation (Google Safe Browsing, VirusTotal), typosquatting detection (`paypa1.com`, `amaz0n-secure.fr`...), flagging links that directly download an `.apk` or `.exe`, and a final safe / suspicious / dangerous score.
+- **History and statistics**: each scan is saved, and an app screen shows the user's habits (scans per week, share of suspicious QR codes, link types, scan locations).
+- **Community features**: QR codes judged dangerous are reported anonymously and shown on a map, a bit like Waze. These reports also help refine the score. The map is available in the app and on a public web page, along with global statistics.
+- **Alerts**: notification if a QR code already scanned is reclassified as dangerous, or if many reports appear nearby.
 
-| Partie | Technologies | Pourquoi |
+## Technical choices
+
+| Part | Technologies | Why |
 |---|---|---|
-| Backend | Python, FastAPI, SQLAlchemy, Alembic | Python est le langage le plus utilisé en cybersécurité et dispose de nombreuses bibliothèques pour analyser des URLs. FastAPI est léger et génère automatiquement la documentation Swagger. |
-| Base de données | PostgreSQL et PostGIS | J'utilise déjà PostgreSQL en cours et en alternance. PostGIS permet de faire les requêtes géographiques nécessaires à la carte. |
-| Mobile | React Native (Expo) et TypeScript | Une seule base de code pour Android et iOS. Venant de Java et d'Android natif, c'était aussi l'occasion d'apprendre React. |
-| Page web publique | React, TypeScript, Recharts, Leaflet | Même écosystème que l'application mobile. |
-| Infrastructure | Docker Compose | Lancer la base de données et l'API avec une seule commande. |
+| Backend | Python, FastAPI, SQLAlchemy, Alembic | Python is the most widely used language in cybersecurity and has many libraries for analyzing URLs. FastAPI is lightweight and automatically generates the Swagger documentation. |
+| Database | PostgreSQL and PostGIS | I already use PostgreSQL in my coursework. PostGIS allows me to run the geographic queries needed for the map. |
+| Mobile | React Native (Expo) and TypeScript | A single codebase for Android and iOS. Coming from Java and native Android, it was also an opportunity to learn React. |
+| Public web page | React, TypeScript, Recharts, Leaflet | Same ecosystem as the mobile app. |
+| Infrastructure | Docker Compose | Start the database and the API with a single command. |
 
-J'ai hésité pour la partie mobile avec Kotlin Multiplatform, qui aurait prolongé mon expérience d'Android natif. Je développe cependant sous Windows, et compiler puis tester la version iOS d'une application KMP nécessite un Mac. Avec Expo, je peux tester l'application sur Android comme sur iPhone, et je garde le même langage que pour la page web.
+For the mobile side, I also considered Kotlin Multiplatform, which would have built on my native Android experience. However, I develop on Windows, and compiling and then testing the iOS version of a KMP app requires a Mac. With Expo, I can test the app on Android and iPhone, and I keep the same language as the web page.
 
-Toutes les fonctionnalités destinées à l'utilisateur (scan, historique, statistiques, carte) sont regroupées dans l'application mobile. La partie web se limite à une page publique, sans compte, qui présente la carte communautaire et des statistiques globales anonymisées. Elle permet de voir ce que produit le projet sans avoir à installer l'application.
+All user-facing features (scan, history, statistics, map) are grouped in the mobile app. The web part is limited to a public page, with no account, that shows the community map and global anonymized statistics. It lets people see what the project produces without having to install the app.
 
 ## Installation
 
-### Backend et base de données (Docker)
+### Backend and database (Docker)
 
 ```bash
 cp .env.example .env
 docker compose up --build
 ```
 
-Avant le premier lancement, il faut modifier dans `.env` le mot de passe de la base et renseigner `JWT_SECRET_KEY` (la commande pour générer une clé est indiquée dans le fichier). Les clés `GOOGLE_SAFE_BROWSING_API_KEY` et `VIRUSTOTAL_API_KEY` sont facultatives : sans elles, l'analyse fonctionne mais se limite aux redirections, aux indices dans l'adresse et à l'âge du domaine.
+Before the first launch, you need to change the database password in `.env` and set `JWT_SECRET_KEY` and `COMMUNITY_SECRET` (the command to generate a key is in the file). The `GOOGLE_SAFE_BROWSING_API_KEY` and `VIRUSTOTAL_API_KEY` keys are optional: without them, the analysis still works but is limited to redirects, URL clues, and domain age.
 
-La page web publique est alors disponible sur http://localhost:8080 et l'API sur http://localhost:8000. La documentation Swagger se trouve sur http://localhost:8000/docs et la route `GET /health` indique si la base de données répond. Les migrations Alembic sont appliquées automatiquement au démarrage du conteneur.
+The public web page is then available at http://localhost:8080 and the API at http://localhost:8000. The Swagger documentation is at http://localhost:8000/docs and the `GET /health` route indicates whether the database responds. Alembic migrations are applied automatically when the container starts.
 
-Je n'utilise pas Docker Desktop, qui prend beaucoup de place, mais Docker installé directement dans WSL. Dans ce cas, il faut démarrer le démon (`sudo service docker start`) puis lancer les commandes depuis WSL, dans `/mnt/d/...`. La variable `WATCHFILES_FORCE_POLLING` du fichier compose sert à garder le rechargement automatique de l'API, car les modifications faites sur un disque Windows ne sont pas détectées autrement.
+I do not use Docker Desktop, which takes up a lot of space, but Docker installed directly in WSL. In that case, you need to start the daemon (`sudo service docker start`) and then run the commands from WSL, in `/mnt/d/...`. The `WATCHFILES_FORCE_POLLING` variable in the compose file keeps the API auto-reload working, because changes made on a Windows disk are not detected otherwise.
 
-Pour créer une migration après avoir modifié un modèle :
+To create a migration after changing a model:
 
 ```bash
 docker compose run --rm backend alembic revision --autogenerate -m "description"
 ```
 
-### Backend hors Docker
+### Backend outside Docker
 
-Une base PostgreSQL doit tout de même tourner ; le plus simple est `docker compose up db`.
+A PostgreSQL database must still be running; the simplest way is `docker compose up db`.
 
 ```bash
 cd backend
 python -m venv .venv
-.venv\Scripts\activate          # sous Linux ou macOS : source .venv/bin/activate
+.venv\Scripts\activate          # on Linux or macOS: source .venv/bin/activate
 pip install -r requirements-dev.txt
 uvicorn app.main:app --reload
 ```
 
-### Application mobile
+### Mobile app
 
 ```bash
 cd mobile
@@ -72,16 +74,16 @@ npm install
 npx expo start
 ```
 
-Il suffit ensuite de scanner le QR code affiché dans le terminal avec l'application **Expo Go** (Android ou iOS). Le téléphone et l'ordinateur doivent être sur le même réseau Wi-Fi.
+Then simply scan the QR code displayed in the terminal with the **Expo Go** app (Android or iOS). The phone and the computer must be on the same Wi-Fi network.
 
-L'application a besoin de joindre l'API. Avec Docker dans WSL2, l'API répond sur le `localhost` de Windows mais pas sur son adresse réseau, car WSL2 possède son propre réseau virtuel. Un petit relais Node rend donc l'API accessible au téléphone pendant le développement. Il se lance dans un second terminal :
+The app needs to reach the API. With Docker in WSL2, the API responds on Windows `localhost` but not on its network address, because WSL2 has its own virtual network. A small Node relay therefore makes the API reachable from the phone during development. It starts in a second terminal:
 
 ```bash
 cd mobile
 npm run api-proxy
 ```
 
-L'application déduit l'adresse du PC de celle du serveur Expo et contacte l'API sur le port 8001. Pour viser une autre adresse, il suffit de définir `EXPO_PUBLIC_API_URL`.
+The app infers the PC address from the Expo server address and contacts the API on port 8001. To target another address, simply set `EXPO_PUBLIC_API_URL`.
 
 ## Tests
 
@@ -90,19 +92,19 @@ cd backend
 pytest
 ```
 
-Les tests du dossier `tests/integration/` s'exécutent sur une vraie base PostGIS : une base `qrshield_test` est créée à côté de la base principale. Ils nécessitent donc que `docker compose up db` soit lancé, et sont ignorés dans le cas contraire.
+The tests in the `tests/integration/` folder run against a real PostGIS database: a `qrshield_test` database is created alongside the main database. They therefore require `docker compose up db` to be running, and are skipped otherwise.
 
 ```bash
 cd mobile
-npm test            # tests unitaires (Jest)
-npm run typecheck   # vérification TypeScript
+npm test            # unit tests (Jest)
+npm run typecheck   # TypeScript check
 ```
 
-À chaque envoi sur GitHub, l'intégration continue exécute les tests du backend sur une base PostGIS, vérifie que les migrations correspondent aux modèles, puis contrôle l'application mobile (TypeScript, ESLint, Jest) et la compilation de la page web.
+On every push to GitHub, continuous integration runs the backend tests against a PostGIS database, checks that migrations match the models, then checks the mobile app (TypeScript, ESLint, Jest) and the web page build.
 
-### Tests de bout en bout
+### End-to-end tests
 
-Le dossier `e2e/` contient 26 tests Playwright qui s'exécutent sur la vraie pile : API, base PostGIS et services de réputation. Ils couvrent l'API, la page web et le parcours complet de l'application, de l'inscription à la suppression d'un scan. Ils vérifient par exemple que le mot de passe Wi-Fi ne figure jamais dans la requête envoyée au serveur, ou qu'un signalement annulé ne change rien aux chiffres publics.
+The `e2e/` folder contains 28 Playwright tests that run against the real stack: API, PostGIS database, and reputation services. They cover the API, the web page, and the full app flow, from sign-up to deleting a scan. They verify, for example, that the Wi-Fi password never appears in the request sent to the server, or that a canceled report does not change the public figures.
 
 ```bash
 docker compose up -d
@@ -111,210 +113,210 @@ npm install
 npm test
 ```
 
-Les tests utilisent Microsoft Edge, déjà présent sous Windows. L'application tourne dans le navigateur au format d'un téléphone, grâce à quelques fichiers `.web` : confirmations, stockage du token et affichage de la carte. Ces fichiers ne sont pas utilisés sur téléphone. Le script suppose que Docker tourne dans WSL.
+The tests use Microsoft Edge, already present on Windows. The app runs in the browser at phone size, thanks to a few `.web` files: confirmations, token storage, and map display. These files are not used on a phone. The script assumes Docker is running in WSL.
 
-Ces tests ne remplacent pas un essai sur un vrai appareil. Ils ne couvrent ni la lecture par la caméra, ni la lampe, ni le Keystore, ni la WebView Android : les deux bugs décrits plus bas n'auraient été vus que sur un téléphone.
+These tests do not replace a test on a real device. They do not cover camera scanning, the flashlight, the Keystore, or the Android WebView: the two bugs described below would only have been seen on a phone.
 
 ## API
 
-La documentation complète est disponible sur `/docs`. Routes actuelles :
+Full documentation is available at `/docs`. Current routes:
 
-| Méthode | Route | Rôle |
+| Method | Route | Role |
 |---|---|---|
-| POST | `/auth/register` | Créer un compte |
-| POST | `/auth/login` | Obtenir un token JWT |
-| POST | `/auth/refresh` | Renouveler la session |
-| POST | `/auth/logout` | Révoquer la session |
-| GET | `/auth/me` | Informations du compte connecté |
-| POST | `/scans` | Enregistrer un QR code scanné, avec une position GPS facultative |
-| GET | `/scans` | Historique paginé, avec un filtre facultatif sur le verdict |
-| GET / DELETE | `/scans/{id}` | Consulter ou supprimer un scan |
-| POST | `/scans/{id}/report` | Signaler un lien à la communauté |
-| GET | `/stats/me` | Statistiques personnelles |
-| GET | `/community/zones` | Zones signalées, sans compte |
-| GET | `/community/stats` | Statistiques globales anonymisées, sans compte |
-| GET | `/notifications` | Alertes de reclassement du compte |
-| POST | `/notifications/{id}/read` | Marquer une alerte comme lue |
+| POST | `/auth/register` | Create an account |
+| POST | `/auth/login` | Get a JWT token |
+| POST | `/auth/refresh` | Renew the session |
+| POST | `/auth/logout` | Revoke the session |
+| GET | `/auth/me` | Information about the logged-in account |
+| POST | `/scans` | Save a scanned QR code, with an optional GPS position |
+| GET | `/scans` | Paginated history, with an optional filter on the verdict |
+| GET / DELETE | `/scans/{id}` | View or delete a scan |
+| POST | `/scans/{id}/report` | Report a link to the community |
+| GET | `/stats/me` | Personal statistics |
+| GET | `/community/zones` | Reported zones, without an account |
+| GET | `/community/stats` | Global anonymized statistics, without an account |
+| GET | `/notifications` | Reclassification alerts for the account |
+| POST | `/notifications/{id}/read` | Mark an alert as read |
 
-Le type de contenu (lien, Wi-Fi, e-mail, téléphone, contact...) est détecté par le serveur. Pour un lien, la réponse de `POST /scans` contient aussi le résultat de l'analyse de sécurité : verdict, score, URL finale, chaîne de redirections et liste des raisons.
+The content type (link, Wi-Fi, email, phone, contact...) is detected by the server. For a link, the response from `POST /scans` also contains the result of the security analysis: verdict, score, final URL, redirect chain, and list of reasons.
 
-## Analyse de sécurité
+## Security analysis
 
-Lorsqu'un lien est scanné, le serveur l'analyse en quatre étapes.
+When a link is scanned, the server analyzes it in four steps.
 
-**1. Suivi des redirections.** Le serveur suit le lien jusqu'à sa destination finale, sans jamais télécharger le contenu des pages : seuls les en-têtes HTTP sont lus. C'est ce qui permet de voir où mène réellement un lien raccourci (`bit.ly`, `qrco.de`...) ou une chaîne de redirections.
+**1. Following redirects.** The server follows the link to its final destination, without ever downloading page content: only HTTP headers are read. This is what makes it possible to see where a shortened link (`bit.ly`, `qrco.de`...) or a redirect chain really leads.
 
-**2. Indices dans l'adresse.** Plusieurs techniques d'arnaque se voient directement dans l'URL :
+**2. Clues in the URL.** Several scam techniques are visible directly in the URL:
 
-| Technique | Exemple | Ce qui est détecté |
+| Technique | Example | What is detected |
 |---|---|---|
-| Faute de frappe volontaire | `netfIix.com`, `chronoposte.fr` | distance d'édition avec le nom d'une marque |
-| Lettres remplacées par des chiffres | `paypa1.com`, `amaz0n-livraison.fr` | comparaison après remplacement des caractères ressemblants |
-| Nom de marque dans un autre domaine | `paypal-securite-compte.com`, `impots-gouv-remboursement.fr` | présence du nom d'une marque hors de ses domaines officiels |
-| Marque placée en sous-domaine | `paypal.com.verification-client.ru` | le vrai domaine est `verification-client.ru` |
-| Homographe | `аpple.com` avec un « а » cyrillique | décodage du punycode et conversion des lettres d'autres alphabets |
-| Astuce du `@` | `https://www.paypal.com@evil.com` | le navigateur ignore tout ce qui précède le `@` |
-| Téléchargement direct | `.apk`, `.exe`, `.msi`... | extension du fichier et type MIME renvoyé par le serveur |
-| Adresse IP, extension douteuse, pas de HTTPS | `http://45.13.22.8/`, `.top`, `.xyz` | indices plus faibles |
+| Deliberate typo | `netfIix.com`, `chronoposte.fr` | edit distance from a brand name |
+| Letters replaced by numbers | `paypa1.com`, `amaz0n-livraison.fr` | comparison after replacing lookalike characters |
+| Brand name in another domain | `paypal-securite-compte.com`, `impots-gouv-remboursement.fr` | presence of a brand name outside its official domains |
+| Brand placed in a subdomain | `paypal.com.verification-client.ru` | the real domain is `verification-client.ru` |
+| Homograph | `аpple.com` with a Cyrillic "а" | punycode decoding and conversion of letters from other alphabets |
+| `@` trick | `https://www.paypal.com@evil.com` | the browser ignores everything before the `@` |
+| Direct download | `.apk`, `.exe`, `.msi`... | file extension and MIME type returned by the server |
+| IP address, suspicious TLD, no HTTPS | `http://45.13.22.8/`, `.top`, `.xyz` | weaker clues |
 
-La liste des marques surveillées se concentre sur celles qui sont le plus souvent imitées en France : banques, administrations (Ameli, impots.gouv), transporteurs, et applications de stationnement, puisque les faux QR codes collés sur les horodateurs sont l'exemple le plus courant de *quishing*.
+The list of monitored brands focuses on those most often imitated in France: banks, French government services (Ameli, impots.gouv), delivery companies, and parking apps, since fake QR codes pasted on parking meters are the most common example of *quishing*.
 
-**3. Services externes.** Google Safe Browsing et VirusTotal indiquent si le lien est déjà connu comme malveillant. L'âge du domaine est obtenu par le protocole RDAP (le successeur de WHOIS) : un site d'arnaque a souvent quelques jours seulement, car il est fermé rapidement. Ces trois vérifications sont lancées en parallèle. Je ne soumets jamais une URL à VirusTotal, je me contente de consulter ses résultats : une URL soumise devient publique, et celle d'un QR code peut contenir des informations personnelles.
+**3. External services.** Google Safe Browsing and VirusTotal indicate whether the link is already known as malicious. Domain age is obtained through the RDAP protocol (the successor to WHOIS): a scam site is often only a few days old, because it is shut down quickly. These three checks are launched in parallel. I never submit a URL to VirusTotal, I only look up existing results: a submitted URL becomes public, and the URL in a QR code may contain personal information.
 
-**4. Score.** Chaque indice a une gravité, et donc un poids : faible (10), moyen (25), élevé (45), critique (80). Les poids s'additionnent, dans la limite de 100. En dessous de 30, le lien est considéré comme sûr ; de 30 à 59, il est suspect ; à partir de 60, il est dangereux. Un seul indice élevé rend donc un lien suspect, deux le rendent dangereux, et un signalement par Safe Browsing ou par au moins trois antivirus suffit à le classer dangereux. Chaque indice est accompagné d'une phrase d'explication affichée à l'utilisateur.
+**4. Score.** Each clue has a severity, and therefore a weight: low (10), medium (25), high (45), critical (80). Weights add up, up to a maximum of 100. Below 30, the link is considered safe; from 30 to 59, suspicious; from 60, dangerous. A single high clue therefore makes a link suspicious, two make it dangerous, and a match in Safe Browsing, or detection by at least three antivirus engines, is enough to classify it as dangerous. Each clue comes with an explanation sentence shown to the user.
 
-Le résultat d'une analyse est partagé entre tous les utilisateurs et réutilisé pendant 24 heures. Une même URL scannée par beaucoup de monde n'est donc analysée qu'une fois par jour, ce qui ménage aussi le quota de VirusTotal (4 requêtes par minute en version gratuite).
+The result of an analysis is shared among all users and reused for 24 hours. The same URL scanned by many people is therefore analyzed only once per day, which also saves the VirusTotal quota (4 requests per minute in the free version).
 
-### Protection du serveur (SSRF)
+### Server protection (SSRF)
 
-Suivre des liens choisis par n'importe qui présente un risque pour le serveur lui-même. Un QR code contenant `http://169.254.169.254/` ou `http://localhost:5432` pourrait amener l'API à interroger ses propres services internes : c'est une attaque SSRF (*Server-Side Request Forgery*). Pour l'éviter, à chaque étape de redirection :
+Following links chosen by anyone poses a risk to the server itself. A QR code containing `http://169.254.169.254/` or `http://localhost:5432` could make the API query its own internal services: this is an SSRF attack (*Server-Side Request Forgery*). To avoid this, at each redirect step:
 
-- je résous moi-même le nom de domaine et je refuse toute adresse qui n'est pas publique (réseau local, boucle locale, adresses réservées, multicast, IPv6 privée ou IPv4 encapsulée dans de l'IPv6) ;
-- je me connecte ensuite directement à l'adresse IP vérifiée, et non au nom de domaine. Sinon, un serveur DNS malveillant pourrait répondre une adresse publique lors de la vérification, puis une adresse interne lors de la connexion (*DNS rebinding*). Le certificat TLS reste vérifié pour le vrai nom de domaine grâce au SNI ;
-- les identifiants éventuellement présents dans l'URL ne sont jamais transmis, et le nombre de redirections comme la durée totale sont limités.
+- I resolve the domain name myself and reject any address that is not public (local network, loopback, reserved addresses, multicast, private IPv6, or IPv4 encapsulated in IPv6);
+- I then connect directly to the verified IP address, not to the domain name. Otherwise, a malicious DNS server could return a public address during verification, then an internal address during connection (*DNS rebinding*). The TLS certificate is still verified for the real domain name thanks to SNI;
+- any credentials present in the URL are never transmitted, and the number of redirects and total duration are limited.
 
-### Limites connues
+### Known limitations
 
-- Les heuristiques peuvent produire des faux positifs : `amazonia-voyages.fr` est jugé suspect parce qu'il contient « amazon ». Pour les noms de marque qui sont aussi des mots courants (Orange, Free, Apple...), seule une correspondance exacte est prise en compte, avec une gravité réduite.
-- Seules les redirections HTTP sont suivies. Une page qui redirige en JavaScript ou avec une balise `<meta refresh>` n'est pas encore analysée.
-- Avec l'API Lookup de Safe Browsing, l'URL complète est envoyée à Google. L'API Update, qui ne transmet qu'un préfixe du hash de l'URL, préserverait mieux la vie privée ; c'est une amélioration que je prévois.
+- Heuristics can produce false positives: `amazonia-voyages.fr` is considered suspicious because it contains "amazon". For brand names that are also common words (Orange, Free, Apple...), only an exact match is taken into account, with reduced severity.
+- Only HTTP redirects are followed. A page that redirects in JavaScript or with a `<meta refresh>` tag is not analyzed yet.
+- With the Safe Browsing Lookup API, the full URL is sent to Google. The Update API, which sends only a hash prefix of the URL, would preserve privacy better; this is an improvement I plan to make.
 
-## Modèle de données
+## Data model
 
-- `users` : les comptes utilisateurs.
-- `scans` : l'historique de chaque utilisateur. La position est stockée dans une colonne PostGIS de type `geography(Point)`.
-- `url_analyses` : une ligne par URL, **partagée** entre tous les utilisateurs.
+- `users`: user accounts.
+- `scans`: each user's history. The location is stored in a PostGIS column of type `geography(Point)`.
+- `url_analyses`: one row per URL, **shared** among all users.
 
-Un scan ne stocke pas son propre verdict : il pointe vers l'analyse de son URL. Ainsi, si une URL est reclassée comme dangereuse plus tard, tous les scans concernés en tiennent compte immédiatement et il est facile de retrouver les utilisateurs à prévenir.
+A scan does not store its own verdict: it points to the analysis of its URL. This way, if a URL is reclassified as dangerous later, all concerned scans take it into account immediately, and it is easy to find the users to warn.
 
-## Statistiques
+## Statistics
 
-Les statistiques sont calculées directement par PostgreSQL : nombre de scans par semaine, part de QR codes à risque, répartition des verdicts, sites les plus scannés et lieux habituels. Chaque scan reçoit aussi une catégorie (site web, menu, paiement, Wi-Fi ou autre), déduite de mots-clés dans l'adresse. La comparaison se fait sur des mots entiers, pour que `paysage-lyon.fr` ne soit pas pris pour un paiement ni `menuiserie-dupont.fr` pour un menu de restaurant.
+Statistics are calculated directly by PostgreSQL: number of scans per week, share of risky QR codes, distribution of verdicts, most scanned sites and usual locations. Each scan also receives a category (website, menu, payment, Wi-Fi or other), inferred from keywords in the address. The comparison uses whole words, so `paysage-lyon.fr` is not mistaken for a payment or `menuiserie-dupont.fr` for a restaurant menu.
 
-Les lieux sont regroupés avec `ST_ClusterDBSCAN`, une fonction de PostGIS qui rassemble les points proches sans fixer à l'avance le nombre de groupes. Plusieurs scans dans le même quartier forment ainsi un seul lieu, ce que ne permettrait pas un simple arrondi des coordonnées : deux points voisins situés de part et d'autre d'une limite d'arrondi seraient séparés.
+Locations are grouped with `ST_ClusterDBSCAN`, a PostGIS function that gathers nearby points without setting the number of groups in advance. Several scans in the same neighborhood thus form a single location, which simple coordinate rounding would not allow: two neighboring points on either side of a rounding boundary would be separated.
 
-La position est facultative et n'est demandée qu'au premier scan. L'application l'arrondit à environ 100 mètres avant de l'envoyer, car une position précise n'apporte rien à ces statistiques et révélerait l'adresse de l'utilisateur. Le nom des lieux est résolu sur le téléphone : le serveur n'a besoin que des coordonnées arrondies.
+Location is optional and only requested on the first scan. The app rounds it to about 100 meters before sending it, because a precise location adds nothing to these statistics and would reveal the user's address. Place names are resolved on the phone: the server only needs the rounded coordinates.
 
-## Volet communautaire
+## Community features
 
-Chaque lien jugé suspect ou dangereux alimente une base commune, et l'utilisateur peut aussi signaler lui-même un lien qui lui paraît frauduleux. Ces signalements sont affichés sur une carte, dans l'application et sur une page web publique, et ils influencent le score.
+Every link judged suspicious or dangerous feeds a shared database, and the user can also report a link they find fraudulent. These reports are displayed on a map, in the app and on a public web page, and they influence the score.
 
-### Anonymisation
+### Anonymization
 
-Une carte publique de ce type révèle facilement où passent les gens. J'ai donc conçu la table `community_reports` pour que l'anonymat ne dépende pas de la bonne volonté du serveur :
+A public map of this kind easily reveals where people go. I therefore designed the `community_reports` table so that anonymity does not depend on the server's goodwill:
 
-- Elle ne contient ni identifiant d'utilisateur, ni lien vers le scan d'origine.
-- La position est ramenée au centre d'une maille d'environ un kilomètre.
-- La date est conservée au jour près. Une heure précise permettrait de retrouver le scan correspondant.
-- Seul le domaine est publié, car une URL complète peut contenir des données personnelles.
-- Une zone ou un domaine n'apparaît publiquement qu'à partir de deux signalements : une zone avec un seul signalement désignerait le passage d'une seule personne.
+- It contains no user identifier and no link to the original scan.
+- The location is snapped to the center of a grid cell about one kilometer wide.
+- The date is kept to the day. A precise time would make it possible to find the corresponding scan.
+- Only the domain is published, because a full URL can contain personal data.
+- An area or a domain is only shown publicly once it has at least two reports: an area with a single report would point to a single person passing through.
 
-Il faut tout de même éviter qu'une même personne compte plusieurs fois. Chaque signalement porte donc une empreinte HMAC calculée à partir de l'utilisateur, de l'URL et d'une clé secrète. Elle est identique pour une même personne et une même URL, ce qui bloque les doublons, mais elle change d'une URL à l'autre : il est impossible de relier deux signalements entre eux, et impossible de vérifier si un utilisateur donné a signalé un lien sans connaître la clé. Supprimer un scan retire aussi les signalements associés.
+Still, the same person must not be counted more than once. Each report therefore carries an HMAC fingerprint computed from the user, the URL and a secret key. It is identical for the same person and the same URL, which blocks duplicates, but it changes from one URL to another: it is impossible to link two reports together, and impossible to check whether a given user reported a link without knowing the key. Deleting a scan also removes the associated reports.
 
-### Apport au score
+### Contribution to the score
 
-La difficulté est d'éviter un score qui s'alimente lui-même. Si les signalements automatiques d'une URL comptaient pour cette même URL, chaque lien suspect finirait par devenir dangereux sans aucune nouvelle information. Seules deux données sont donc prises en compte :
+The difficulty is avoiding a score that feeds itself. If automatic reports for a URL counted for that same URL, every suspicious link would eventually become dangerous without any new information. So only two inputs are taken into account:
 
-- Les signalements faits par des personnes : à partir de 3, un indice moyen ; à partir de 10, un indice élevé.
-- La présence d'autres liens classés dangereux sur le même domaine, ce qui constitue une information réellement indépendante.
+- Reports made by people: starting at 3, a medium signal; starting at 10, a high signal.
+- The presence of other links classified as dangerous on the same domain, which is genuinely independent information.
 
-L'apport de la communauté est plafonné au niveau « élevé ». Une série de faux comptes peut donc rendre un site suspect, mais pas dangereux, et les domaines officiels des marques surveillées ne peuvent pas être visés. Les routes publiques, la connexion, l'inscription et les signalements sont limités en débit. Cette limite ne suffit pas contre un attaquant qui dispose de nombreuses adresses IP et de nombreux comptes ; une vérification des adresses e-mail réduirait ce risque.
+The community contribution is capped at the "high" level. A series of fake accounts can therefore make a site suspicious, but not dangerous, and the official domains of monitored brands cannot be targeted. Public routes, login, signup and reports are rate-limited. This limit is not enough against an attacker with many IP addresses and many accounts; email address verification would reduce this risk.
 
-### Page web
+### Web page
 
-La page publique, sans compte, est dans `web/`. Elle présente la carte, l'évolution des signalements, les types de menaces, les villes et les domaines les plus touchés. Comme le projet n'a pas encore d'utilisateurs, elle s'appuie pour l'instant sur des données fictives, ce qu'un bandeau indique clairement. Le script de démonstration n'utilise que l'extension réservée `.example`, afin de ne mettre en cause aucun vrai site :
+The public page, with no account, is in `web/`. It shows the map, the evolution of reports, threat types, and the most affected cities and domains. Since the project does not yet have users, it currently relies on fictional data, which a banner clearly indicates. The demo script uses only the reserved `.example` extension, to avoid implicating any real site:
 
 ```bash
 cd backend
-python -m scripts.seed_demo            # ajoute les données fictives
-python -m scripts.seed_demo --clear    # les retire
+python -m scripts.seed_demo            # adds the fictional data
+python -m scripts.seed_demo --clear    # removes them
 ```
 
-Une version statique de cette page est publiée sur GitHub Pages. Elle ne dépend d'aucun serveur : `web/scripts/export-demo.mjs` copie les données de l'API dans `web/public/demo-data.json`, et refuse de le faire si un domaine n'est pas fictif, puisque ce fichier est public. La page lit ensuite ce fichier lorsqu'elle est compilée avec `VITE_STATIC_DEMO=true`. Le déploiement est automatique à chaque modification de `web/`.
+A static version of this page is published on GitHub Pages. It does not depend on any server: `web/scripts/export-demo.mjs` copies the API data into `web/public/demo-data.json`, and refuses to do so if a domain is not fictional, since this file is public. The page then reads this file when it is built with `VITE_STATIC_DEMO=true`. Deployment is automatic on every change to `web/`.
 
-## Alertes
+## Alerts
 
-Un lien peut devenir dangereux après avoir été scanné : une page de phishing est souvent mise en ligne d'abord, puis signalée plus tard. Le conteneur `worker` réanalyse donc régulièrement les liens déjà scannés, par petits lots pour respecter le quota de VirusTotal. Lorsqu'un lien passe de sûr ou suspect à dangereux, chaque personne qui l'a scanné reçoit une alerte, une seule fois par lien.
+A link can become dangerous after it has been scanned: a phishing page is often put online first and reported later. The `worker` container therefore regularly reanalyzes links that have already been scanned, in small batches to stay within the VirusTotal quota. When a link goes from safe or suspicious to dangerous, everyone who scanned it receives an alert, only once per link.
 
-L'alerte de zone fonctionne différemment, pour des raisons de vie privée. Le serveur ne reçoit jamais la position actuelle de l'utilisateur : l'application télécharge les zones publiques des sept derniers jours et calcule elle-même s'il y a au moins cinq signalements dans un rayon de cinq kilomètres. Cette alerte n'est pas répétée pendant une semaine.
+The zone alert works differently, for privacy reasons. The server never receives the user's current location: the app downloads the public zones from the last seven days and calculates on its own whether there are at least five reports within a five-kilometer radius. This alert is not repeated for a week.
 
-Les notifications à distance ont été retirées d'Expo Go sur Android depuis le SDK 53 : elles demandent une version compilée de l'application et un projet Firebase. Pour l'instant, l'application récupère donc les alertes lorsqu'elle est ouverte, puis les affiche sous forme de notifications locales. Elles n'arrivent pas tant qu'elle est fermée. Dans Expo Go, l'application reçoit bien l'appui sur une notification, avec le bon scan, mais Expo Go ne la ramène pas au premier plan : ce comportement reste à vérifier sur une version compilée. Les alertes de l'onglet Compte mènent directement au scan. Le passage à de vraies notifications à distance ne demanderait que d'envoyer depuis le serveur les alertes déjà créées.
+Remote notifications have been removed from Expo Go on Android since SDK 53: they require a compiled version of the app and a Firebase project. For now, the app therefore fetches alerts when it is open and then displays them as local notifications. They do not arrive while it is closed. In Expo Go, the app does receive the tap on a notification, with the correct scan, but Expo Go does not bring it back to the foreground: this behavior still needs to be checked on a compiled build. Alerts in the Account tab lead directly to the scan. Switching to real remote notifications would only require sending the already created alerts from the server.
 
-## Application mobile
+## Mobile app
 
-L'application comporte cinq onglets : le scanner, l'historique, filtrable par verdict, la carte communautaire, les statistiques et le compte. La carte utilise Leaflet dans une WebView, comme le site : cela évite d'avoir à gérer une clé Google Maps. La bibliothèque est chargée avec une empreinte d'intégrité, et aucun lien ne peut s'ouvrir dans cette WebView. Après la connexion, elle s'ouvre directement sur la caméra. Une fois le QR code lu, il est envoyé au serveur et l'écran de résultat affiche le verdict avec un code couleur, le score, les raisons en clair et la chaîne de redirections. Le domaine de destination apparaît **en gros caractères**, car c'est l'information la plus utile pour repérer une arnaque et elle n'est pas toujours évidente à lire dans l'URL brute :
+The app has five tabs: scanner, history (filterable by verdict), community map, statistics, and account. The map uses Leaflet in a WebView, like the website: this avoids having to manage a Google Maps key. The library is loaded with an integrity hash, and no link can open in this WebView.
 
-- `https://www.paypal.com@evil.com/login` mène en réalité vers `evil.com` : tout ce qui précède le `@` est ignoré par le navigateur.
-- `https://аpple.com`, écrit avec un « а » cyrillique, s'affiche `xn--pple-43d.com`, ce qui rend l'imitation visible.
+After login, the app opens directly on the camera. Once the QR code is read, it is sent to the server, and the result screen displays the verdict with a color code, the score, plain-language reasons, and the redirect chain. The destination domain appears **in large type**, because it is the most useful information for spotting a scam, and it is not always easy to read in the raw URL:
 
-Le lien n'est jamais ouvert automatiquement. Le bouton n'apparaît qu'une fois l'analyse terminée, et une confirmation est demandée. Si le lien est suspect ou dangereux, ce bouton passe au second plan et devient « Ouvrir quand même » : la décision reste à l'utilisateur, mais le choix par défaut est de ne pas ouvrir. C'est l'URL finale qui est ouverte, c'est-à-dire celle qui a été analysée, car le lien de départ pourrait rediriger ailleurs au second passage. Seuls les liens `http` et `https` peuvent être ouverts, ce qui exclut des schémas comme `javascript:` ou `intent:`.
+- `https://www.paypal.com@evil.com/login` actually leads to `evil.com`: everything before the `@` is ignored by the browser.
+- `https://аpple.com`, written with a Cyrillic "а", displays as `xn--pple-43d.com`, which makes the imitation visible.
 
-Pour un QR code Wi-Fi, l'application affiche le nom du réseau et le type de sécurité, mais jamais le mot de passe. Celui-ci est retiré avant l'envoi au serveur : il ne quitte pas le téléphone.
+The link is never opened automatically. The button appears only after the analysis is finished, and a confirmation is requested. If the link is suspicious or dangerous, this button becomes secondary and turns into « Ouvrir quand même » (Open anyway): the decision is still up to the user, but the default choice is not to open it. The app opens the final URL, meaning the one that was analyzed, because the original link could redirect somewhere else on a second visit. Only `http` and `https` links can be opened, which rules out schemes such as `javascript:` or `intent:`.
 
-Sur Android, `expo-camera` renvoie dans le champ `data` une version reformatée du contenu : pour un QR code Wi-Fi, il s'agit du nom du réseau suivi du mot de passe, sans le préfixe `WIFI:`. Le type n'était donc plus reconnu et le mot de passe s'affichait en clair. J'ai découvert ce problème en testant sur un vrai téléphone, car les tests unitaires utilisaient directement le contenu brut. L'application lit désormais le champ `raw`, et un test reproduit ce cas.
+For a Wi-Fi QR code, the app displays the network name and security type, but never the password. The password is removed before sending to the server: it does not leave the phone.
 
-Les tests sur téléphone ont révélé un second problème : sur Android, `expo-camera` ignore la propriété `active`. La caméra et la lampe restaient donc allumées quand l'utilisateur changeait d'onglet, et des QR codes pouvaient être lus à son insu. Le composant caméra est maintenant retiré de l'écran dès que l'onglet n'est plus affiché, ce qui ferme réellement la caméra.
+On Android, `expo-camera` returns a reformatted version of the content in the `data` field: for a Wi-Fi QR code, this is the network name followed by the password, without the `WIFI:` prefix. The type was therefore no longer recognized and the password was displayed in plain text. I discovered this problem while testing on a real phone, because the unit tests used the raw content directly. The app now reads the `raw` field, and a test reproduces this case.
 
-## Sécurité
+Tests on a phone revealed a second problem: on Android, `expo-camera` ignores the `active` property. The camera and flashlight therefore stayed on when the user switched tabs, and QR codes could be read without the user's knowledge. The camera component is now removed from the screen as soon as the tab is no longer displayed, which actually closes the camera.
 
-- Les secrets (mots de passe, clés d'API, clé JWT) se trouvent uniquement dans `.env`, qui n'est pas versionné. Le fichier `.env.example` sert de modèle.
-- Le conteneur de l'API ne tourne pas en root et PostgreSQL n'est exposé que sur `127.0.0.1`.
-- En cas d'erreur de base de données, l'API ne renvoie jamais le message d'erreur brut, qui pourrait donner des informations sur l'infrastructure.
-- Les mots de passe sont hachés avec Argon2id, et hachés de nouveau à la connexion si les paramètres recommandés évoluent.
-- Le jeton d'accès ne dure que 15 minutes, car un JWT ne peut pas être révoqué. La session se renouvelle grâce à un refresh token valable 30 jours, à usage unique et stocké en base sous forme de hash. Si un jeton déjà utilisé est présenté, il a forcément été copié : toute la session est coupée, et l'utilisateur doit se reconnecter.
-- Les tokens JWT sont signés en HS256 avec une clé d'au moins 32 caractères. L'algorithme accepté est imposé par le serveur : un token forgé avec `alg: none` est donc refusé (un test le vérifie).
-- À la connexion, le mot de passe est vérifié même lorsque l'e-mail n'existe pas, en le comparant à un hash factice. Sans cette précaution, la réponse serait plus rapide pour un e-mail inconnu et il serait possible de deviner quels comptes existent en mesurant le temps de réponse.
-- Les QR codes Wi-Fi contiennent le mot de passe du réseau en clair (`WIFI:S:MaBox;P:motdepasse;;`). Il est masqué avant l'enregistrement et n'est jamais stocké en base.
-- Demander le scan d'un autre utilisateur renvoie une erreur 404 et non 403, afin de ne pas confirmer que l'identifiant existe.
+## Security
 
-- Sur le téléphone, le token JWT est conservé avec `expo-secure-store`, qui s'appuie sur le Keystore Android et le Keychain iOS. AsyncStorage l'aurait stocké en clair.
+- Secrets (passwords, API keys, JWT key) are only in `.env`, which is not versioned. The `.env.example` file serves as a template.
+- The API container does not run as root and PostgreSQL is exposed only on `127.0.0.1`.
+- On a database error, the API never returns the raw error message, which could reveal information about the infrastructure.
+- Passwords are hashed with Argon2id and rehashed on login if the recommended parameters change.
+- The access token lasts only 15 minutes, because a JWT cannot be revoked. The session is renewed with a refresh token valid for 30 days, single-use, and stored in the database as a hash. If an already used token is presented, it must have been copied: the whole session is cut off, and the user must log in again.
+- JWT tokens are signed with HS256 using a key of at least 32 characters. The accepted algorithm is enforced by the server: a token forged with `alg: none` is therefore rejected (a test checks this).
+- On login, the password is checked even when the email does not exist, by comparing it to a dummy hash. Without this precaution, the response would be faster for an unknown email, and it would be possible to guess which accounts exist by measuring the response time.
+- Wi-Fi QR codes contain the network password in plain text (`WIFI:S:MaBox;P:motdepasse;;`). It is masked before saving and is never stored in the database.
+- Requesting another user's scan returns a 404 error, not a 403, so as not to confirm that the identifier exists.
+- On the phone, the JWT token is kept with `expo-secure-store`, which relies on the Android Keystore and iOS Keychain. AsyncStorage would have stored it in plain text.
+- Login attempts are limited by IP address and by account, which slows down password guessing.
+- The web page is served by nginx without root privileges, with a Content Security Policy (CSP).
 
-- Le nombre de tentatives de connexion est limité par adresse IP et par compte, ce qui freine le test de mots de passe.
-- La page web est servie par nginx sans droits root, avec une politique de sécurité du contenu (CSP).
+Rate limiting is kept in memory, which is enough for a single process; with multiple API instances, a shared counter such as Redis would be needed. In development, the app communicates with the API over HTTP on the local network; a real deployment will need to use HTTPS.
 
-La limitation de débit est conservée en mémoire, ce qui suffit pour un seul processus ; avec plusieurs instances de l'API, il faudrait un compteur partagé comme Redis. En développement, l'application communique avec l'API en HTTP sur le réseau local ; un déploiement réel devra passer en HTTPS.
-
-## Organisation du code
+## Code organization
 
 ```
 backend/
   app/
-    main.py        point d'entrée FastAPI
-    config.py      configuration lue depuis les variables d'environnement
-    database.py    connexion SQLAlchemy
-    routers/       routes de l'API
-    models/        tables SQLAlchemy
-    schemas/       validation des entrées et sorties (Pydantic)
-    services/      analyse des URLs, scoring, volet communautaire
-    security/      hachage des mots de passe, tokens JWT
+    main.py        FastAPI entry point
+    config.py      configuration read from environment variables
+    database.py    SQLAlchemy connection
+    routers/       API routes
+    models/        SQLAlchemy tables
+    schemas/       input and output validation (Pydantic)
+    services/      URL analysis, scoring, community features
+    security/      password hashing, JWT tokens
   alembic/         migrations
   tests/
 mobile/
   src/
-    app/           écrans (expo-router : un fichier = une route)
-    components/    composants réutilisables
-    hooks/         connexion, envoi et analyse d'un scan
-    services/      appels à l'API, stockage sécurisé du token, position
-    utils/         lecture du contenu des QR codes, libellés
+    app/           screens (expo-router: one file = one route)
+    components/    reusable components
+    hooks/         login, scan submission and analysis
+    services/      API calls, secure token storage, location
+    utils/         QR code content parsing, labels
 web/
   src/
-    components/    carte Leaflet, graphiques, tableau
-    services/      appels à l'API publique
-    utils/         ville la plus proche d'une zone
+    components/    Leaflet map, charts, table
+    services/      public API calls
+    utils/         nearest city to a zone
 ```
 
-## Avancement
+## Progress
 
-- [x] Mise en place du projet (Docker Compose, structure, configuration, route `/health`)
-- [x] Modèle de données, migrations, comptes utilisateurs et historique des scans
-- [x] Écran de scan sur mobile et affichage du contenu
-- [x] Analyse de sécurité côté serveur (redirections, typosquatting, Safe Browsing, VirusTotal, âge du domaine)
-- [x] Algorithme de scoring
-- [x] Comptes utilisateurs et affichage du résultat de l'analyse dans l'application
-- [x] Historique et statistiques personnelles dans l'application
-- [x] Carte communautaire (application et page web publique)
-- [x] Reclassement automatique et alertes (notifications locales)
-- [ ] Notifications à distance (version compilée et Firebase)
-- [x] Sessions longues avec refresh tokens
-- [x] Page de démonstration statique sur GitHub Pages
-- [ ] Déploiement de l'API
+- [x] Project setup (Docker Compose, structure, configuration, `/health` route)
+- [x] Data model, migrations, user accounts, and scan history
+- [x] Mobile scan screen and content display
+- [x] Server-side security analysis (redirects, typosquatting, Safe Browsing, VirusTotal, domain age)
+- [x] Scoring algorithm
+- [x] User accounts and display of the analysis result in the app
+- [x] Personal history and statistics in the app
+- [x] Community map (app and public web page)
+- [x] Automatic reclassification and alerts (local notifications)
+- [ ] Remote notifications (compiled version and Firebase)
+- [x] Long sessions with refresh tokens
+- [x] Static demo page on GitHub Pages
+- [ ] API deployment

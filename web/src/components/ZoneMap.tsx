@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import L from "leaflet";
+import { useLang } from "../i18n";
 import type { Zone } from "../services/api";
 import { nearestCity } from "../utils/cities";
 
@@ -11,6 +12,7 @@ const FRANCE_CENTER: L.LatLngTuple = [46.6, 2.5];
 const INITIAL_ZOOM = window.innerWidth < 720 ? 5 : 6;
 
 export default function ZoneMap({ zones }: ZoneMapProps) {
+  const { t } = useLang();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<L.Map | null>(null);
 
@@ -57,7 +59,7 @@ export default function ZoneMap({ zones }: ZoneMapProps) {
         fillColor: mostlyDangerous ? "#c8321e" : "#d9920f",
       })
         .bindTooltip(
-          `<strong>${city}</strong><br />${zone.reports} reports, ${zone.dangerous} dangerous`,
+          `<strong>${city}</strong><br />${t.mapTooltip(zone.reports, zone.dangerous)}`,
         )
         .addTo(layer);
     }
@@ -65,7 +67,7 @@ export default function ZoneMap({ zones }: ZoneMapProps) {
     return () => {
       mapRef.current?.removeLayer(layer);
     };
-  }, [zones]);
+  }, [zones, t]);
 
   return (
     <div className="map-block">
@@ -73,13 +75,13 @@ export default function ZoneMap({ zones }: ZoneMapProps) {
       <div className="map-legend">
         <span className="legend-item">
           <span className="legend-dot legend-dot-danger" aria-hidden="true" />
-          Mostly dangerous links
+          {t.legendDangerous}
         </span>
         <span className="legend-item">
           <span className="legend-dot legend-dot-warning" aria-hidden="true" />
-          Mostly suspicious links
+          {t.legendSuspicious}
         </span>
-        <span>A bigger circle means more reports.</span>
+        <span>{t.legendSize}</span>
       </div>
           </div>
   );

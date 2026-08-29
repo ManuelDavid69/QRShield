@@ -73,6 +73,37 @@ code {
   font-size: 14px;
 }
 
+.topbar-links {
+  display: flex;
+  align-items: baseline;
+  gap: 20px;
+}
+
+.lang-switch {
+  display: inline-flex;
+  border: 1px solid var(--line);
+}
+
+.lang-switch button {
+  padding: 2px 9px;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.lang-switch button[aria-pressed="true"] {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.lang-switch button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
 .wordmark {
   font-weight: 500;
 }

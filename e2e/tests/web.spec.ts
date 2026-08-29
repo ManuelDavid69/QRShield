@@ -68,4 +68,19 @@ test.describe("Page web publique", () => {
     );
     expect(overflow).toBe(0);
   });
+
+  test("le bouton de langue traduit toute la page et garde le choix", async ({ page }) => {
+    await page.goto("/");
+    await expect(page.locator("html")).toHaveAttribute("lang", "en");
+
+    await page.getByRole("button", { name: "FR", exact: true }).click();
+    await expect(page.getByRole("heading", { level: 1 })).toContainText("faux QR code");
+    await expect(page.locator("html")).toHaveAttribute("lang", "fr");
+    await expect(page).toHaveTitle(/QR codes piégés/);
+    await page.locator("path.leaflet-interactive").first().dispatchEvent("mouseover");
+    await expect(page.locator(".leaflet-tooltip")).toContainText("signalements, dont");
+
+    await page.reload();
+    await expect(page.getByRole("heading", { level: 1 })).toContainText("faux QR code");
+  });
 });

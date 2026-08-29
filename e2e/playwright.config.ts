@@ -14,6 +14,7 @@ export default defineConfig({
   use: {
     // Edge est déjà présent sous Windows : aucun navigateur à télécharger
     channel: "msedge",
+    locale: "en-US",
     screenshot: "only-on-failure",
     launchOptions: { args: ["--use-fake-ui-for-media-stream", "--use-fake-device-for-media-stream"] },
   },

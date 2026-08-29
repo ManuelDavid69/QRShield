@@ -1,29 +1,68 @@
+import dangerScreen from "../assets/screens/danger.png";
 import { useLang } from "../i18n";
+import PhoneShot from "./PhoneShot";
 
-// Même ordre que t.features
-const ICONS = [
-  "M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11zM12 12.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z",
-  "M12 3 2.5 20h19L12 3zM12 10v4.5M12 17.5v.01",
-  "M12 3l8 3v6c0 4.6-3.4 7.8-8 9-4.6-1.2-8-4.4-8-9V6l8-3zM8.5 12l2.5 2.5 4.5-4.5",
-  "M12 4v11M7.5 10.5 12 15l4.5-4.5M5 19.5h14",
-  "M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 7.5V12l3 2",
-  "M6 16.5V11a6 6 0 1 1 12 0v5.5l1.5 2h-15l1.5-2zM10 21h4",
-];
+const CHAIN_URLS = ["court.example/3xK9q", "promo-parking.example", "paypa1-securite.top"];
 
 export default function Features() {
   const { t } = useLang();
 
   return (
-    <ul className="features">
-      {t.features.map((feature, index) => (
-        <li key={feature.title} className="card">
-          <svg className="feature-icon" viewBox="0 0 24 24" aria-hidden="true">
-            <path d={ICONS[index]} />
-          </svg>
-          <h3>{feature.title}</h3>
-          <p>{feature.text}</p>
-        </li>
-      ))}
-    </ul>
+    <div className="highlights">
+      <article className="highlight">
+        <div className="highlight-text">
+          <h2>{t.redirectTitle}</h2>
+          <p>{t.redirectText}</p>
+        </div>
+        <div className="chain-panel">
+          <ol className="chain">
+            {CHAIN_URLS.map((url, index) => (
+              <li key={url}>
+                <span className="chain-label">{t.chain[index]}</span>
+                <span className="chain-url">{url}</span>
+              </li>
+            ))}
+          </ol>
+          <p className="scribble chain-note">
+            <svg viewBox="0 0 48 40" aria-hidden="true">
+              <path d="M44 34C30 36 14 28 8 7M3 15 8 6l8 6" />
+            </svg>
+            {t.chainNote}
+          </p>
+        </div>
+      </article>
+
+      <article className="highlight highlight-flip">
+        <div className="highlight-text">
+          <h2>{t.lookalikeTitle}</h2>
+          <p>{t.lookalikeText}</p>
+        </div>
+        <div className="lookalikes-block">
+          {/* Le premier caractère du dernier domaine est un а cyrillique, comme dans une vraie attaque */}
+          <ul className="lookalikes">
+            <li>
+              paypa<mark>1</mark>-securite.top
+            </li>
+            <li>
+              amaz<mark>0</mark>n-livraison.fr
+            </li>
+            <li>
+              <mark>а</mark>pple.com
+            </li>
+          </ul>
+          <p className="scribble lookalike-note">{t.lookalikeNote}</p>
+        </div>
+      </article>
+
+      <article className="highlight highlight-verdict">
+        <div className="highlight-text">
+          <h2>{t.verdictTitle}</h2>
+          <p>{t.verdictText}</p>
+        </div>
+        <div className="phone-peek">
+          <PhoneShot src={dangerScreen} alt={t.verdictAlt} />
+        </div>
+      </article>
+    </div>
   );
 }

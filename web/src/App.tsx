@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
-import dangerScreen from "./assets/screens/danger.png";
 import historyScreen from "./assets/screens/history.png";
 import statsScreen from "./assets/screens/stats.png";
 import suspectScreen from "./assets/screens/suspect.png";
 import DataTable from "./components/DataTable";
 import Features from "./components/Features";
+import HowItWorks from "./components/HowItWorks";
 import PhoneShot from "./components/PhoneShot";
 import RankedBars from "./components/RankedBars";
 import WeeklyBars from "./components/WeeklyBars";
@@ -14,9 +14,6 @@ import { fetchStats, fetchZones } from "./services/api";
 import type { CommunityStats, Zone } from "./services/api";
 
 const REPO_URL = "https://github.com/ManuelDavid69/QRShield";
-
-// Même ordre que t.screens
-const SCREENS = [dangerScreen, historyScreen, statsScreen];
 
 const EMPTY_ZONES: Zone[] = [];
 
@@ -118,48 +115,45 @@ export default function App() {
               </div>
               <p className="availability">{t.availability}</p>
             </div>
-            <PhoneShot src={suspectScreen} alt={t.heroAlt} />
+            <div className="hero-phone">
+              <PhoneShot src={suspectScreen} alt={t.heroAlt} />
+            </div>
           </div>
         </section>
 
-        <section id="features" className="section section-alt">
+        <section id="features" className="section section-features">
           <div className="container">
-            <h2>{t.featuresTitle}</h2>
             <Features />
           </div>
         </section>
 
-        <section id="how" className="section">
+        <section id="how" className="section section-how">
           <div className="container">
-            <h2>{t.howTitle}</h2>
-            <ol className="steps">
-              {t.steps.map((step, index) => (
-                <li key={step.title}>
-                  <span className="step-number">{index + 1}</span>
-                  <h3>{step.title}</h3>
-                  <p>{step.text}</p>
-                </li>
-              ))}
-            </ol>
+            <HowItWorks />
           </div>
         </section>
 
-        <section className="section section-alt">
-          <div className="container">
-            <h2>{t.screensTitle}</h2>
-            <p className="section-intro">{t.screensIntro}</p>
-            <ul className="screens">
-              {t.screens.map((screen, index) => (
-                <li key={screen.caption}>
-                  <PhoneShot src={SCREENS[index]} alt={screen.alt} />
-                  <p>{screen.caption}</p>
-                </li>
-              ))}
-            </ul>
+        <section className="section section-after">
+          <div className="container after">
+            <div>
+              <h2>{t.afterTitle}</h2>
+              <ul className="prose-list">
+                {t.after.map((item) => (
+                  <li key={item.title}>
+                    <strong>{item.title}</strong> {item.text}
+                  </li>
+                ))}
+              </ul>
+              <p className="after-note">{t.afterNote}</p>
+            </div>
+            <div className="fan">
+              <PhoneShot src={statsScreen} alt={t.statsAlt} />
+              <PhoneShot src={historyScreen} alt={t.historyAlt} />
+            </div>
           </div>
         </section>
 
-        <section id="map" className="section">
+        <section id="map" className="section section-alt">
           <div className="container">
             <h2>{t.mapTitle}</h2>
             <p className="section-intro">{t.mapIntro}</p>
@@ -204,15 +198,16 @@ export default function App() {
           </div>
         </section>
 
-        <section id="privacy" className="section section-alt">
-          <div className="container">
-            <h2>{t.privacyTitle}</h2>
-            <p className="section-intro">{t.privacyIntro}</p>
-            <ul className="privacy">
+        <section id="privacy" className="section">
+          <div className="container privacy">
+            <div>
+              <h2>{t.privacyTitle}</h2>
+              <p className="section-intro">{t.privacyIntro}</p>
+            </div>
+            <ul className="prose-list">
               {t.privacy.map((item) => (
-                <li key={item.title} className="card">
-                  <h3>{item.title}</h3>
-                  <p>{item.text}</p>
+                <li key={item.title}>
+                  <strong>{item.title}</strong> {item.text}
                 </li>
               ))}
             </ul>

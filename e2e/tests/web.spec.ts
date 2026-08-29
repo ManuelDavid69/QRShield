@@ -15,8 +15,8 @@ test.describe("Page web publique", () => {
     await api.dispose();
 
     await page.goto("/");
-    await expect(page.getByRole("heading", { level: 1 })).toContainText("fake QR code");
-    await expect(page.getByText("the numbers below are made up", { exact: false })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1 })).toContainText("Check where a QR code leads");
+    await expect(page.getByText("the figures below are fictional", { exact: false })).toBeVisible();
 
     const figures = page.locator(".figure-value");
     await expect(figures.nth(0)).toHaveText(String(stats.total_reports));
@@ -74,13 +74,13 @@ test.describe("Page web publique", () => {
     await expect(page.locator("html")).toHaveAttribute("lang", "en");
 
     await page.getByRole("button", { name: "FR", exact: true }).click();
-    await expect(page.getByRole("heading", { level: 1 })).toContainText("faux QR code");
+    await expect(page.getByRole("heading", { level: 1 })).toContainText("Vérifiez où mène un QR code");
     await expect(page.locator("html")).toHaveAttribute("lang", "fr");
-    await expect(page).toHaveTitle(/QR codes piégés/);
+    await expect(page).toHaveTitle(/avant de l'ouvrir/);
     await page.locator("path.leaflet-interactive").first().dispatchEvent("mouseover");
     await expect(page.locator(".leaflet-tooltip")).toContainText("signalements, dont");
 
     await page.reload();
-    await expect(page.getByRole("heading", { level: 1 })).toContainText("faux QR code");
+    await expect(page.getByRole("heading", { level: 1 })).toContainText("Vérifiez où mène un QR code");
   });
 });

@@ -1,15 +1,22 @@
 import { useEffect, useMemo, useState } from "react";
+import dangerScreen from "./assets/screens/danger.png";
+import historyScreen from "./assets/screens/history.png";
+import statsScreen from "./assets/screens/stats.png";
+import suspectScreen from "./assets/screens/suspect.png";
 import DataTable from "./components/DataTable";
+import Features from "./components/Features";
+import PhoneShot from "./components/PhoneShot";
 import RankedBars from "./components/RankedBars";
-import ScanExample from "./components/ScanExample";
 import WeeklyBars from "./components/WeeklyBars";
 import ZoneMap from "./components/ZoneMap";
 import { useLang } from "./i18n";
 import { fetchStats, fetchZones } from "./services/api";
 import type { CommunityStats, Zone } from "./services/api";
-import { nearestCity } from "./utils/cities";
 
 const REPO_URL = "https://github.com/ManuelDavid69/QRShield";
+
+// Même ordre que t.screens
+const SCREENS = [dangerScreen, historyScreen, statsScreen];
 
 const EMPTY_ZONES: Zone[] = [];
 
@@ -56,166 +63,169 @@ export default function App() {
     [stats, t],
   );
 
-  const domainRows = useMemo(
-    () => (stats?.top_domains ?? []).map((item) => ({ label: item.domain, value: item.reports })),
-    [stats],
-  );
-
-  const cityRows = useMemo(() => {
-    const totals = new Map<string, number>();
-    for (const zone of zones) {
-      const label = nearestCity(zone.latitude, zone.longitude);
-      totals.set(label, (totals.get(label) ?? 0) + zone.reports);
-    }
-    return [...totals.entries()]
-      .map(([label, value]) => ({ label, value }))
-      .sort((a, b) => b.value - a.value)
-      .slice(0, 5);
-  }, [zones]);
-
   const formatNumber = (value: number) => value.toLocaleString(locale);
 
   return (
-    <div className="page">
-      <nav className="topbar">
-        <span className="wordmark">QRShield</span>
-        <div className="topbar-links">
-          <div className="lang-switch" role="group" aria-label="Language / Langue">
-            {(["en", "fr"] as const).map((option) => (
-              <button
-                key={option}
-                type="button"
-                aria-pressed={lang === option}
-                onClick={() => setLang(option)}
-              >
-                {option.toUpperCase()}
-              </button>
-            ))}
-          </div>
-          <a href={REPO_URL} target="_blank" rel="noreferrer">
-            {t.source}
+    <>
+      <header className="header">
+        <div className="container header-row">
+          <a className="logo" href="#top">
+            <svg viewBox="0 0 32 32" aria-hidden="true">
+              <rect width="32" height="32" rx="7" />
+              <path d="M9 9h6v6H9zM17 9h6v6h-6zM9 17h6v6H9zM18 18h2v2h-2zM21 21h2v2h-2z" />
+            </svg>
+            QRShield
           </a>
+          <nav className="nav-links">
+            <a href="#features">{t.navFeatures}</a>
+            <a href="#how">{t.navHow}</a>
+            <a href="#map">{t.navMap}</a>
+            <a href="#privacy">{t.navPrivacy}</a>
+          </nav>
+          <div className="header-actions">
+            <div className="lang-switch" role="group" aria-label="Language / Langue">
+              {(["en", "fr"] as const).map((option) => (
+                <button
+                  key={option}
+                  type="button"
+                  aria-pressed={lang === option}
+                  onClick={() => setLang(option)}
+                >
+                  {option.toUpperCase()}
+                </button>
+              ))}
+            </div>
+            <a className="header-github" href={REPO_URL} target="_blank" rel="noreferrer">
+              GitHub
+            </a>
+          </div>
         </div>
-      </nav>
-
-      <header className="hero">
-        <div className="hero-text">
-          <p className="kicker">{t.kicker}</p>
-          <h1>{t.title}</h1>
-          <p className="lead">{t.lead}</p>
-        </div>
-        <ScanExample />
       </header>
 
-      {showDemo && (
-        <p className="note">
-          <strong>{t.demoLabel}</strong>
-          {t.demoBefore}
-          <code>.example</code>
-          {t.demoAfter}
-        </p>
-      )}
-
-      {failed && <p className="state">{t.unavailable}</p>}
-      {!failed && !stats && <p className="state">{t.loading}</p>}
-
-      {stats && (
-        <main>
-          <section className="figures" aria-label={t.figuresLabel}>
-            <p>
-              <span className="figure-value">{formatNumber(stats.total_reports)}</span>
-              <span className="figure-label">{t.reports}</span>
-            </p>
-            <p>
-              <span className="figure-value">{formatNumber(stats.dangerous_reports)}</span>
-              <span className="figure-label">{t.dangerousLinks}</span>
-            </p>
-            <p>
-              <span className="figure-value">{formatNumber(stats.zones)}</span>
-              <span className="figure-label">{t.areas}</span>
-            </p>
-            <p className="figures-period">{t.period(stats.period_days)}</p>
-          </section>
-
-          <section className="section">
-            <h2>
-              <span className="number">01</span> {t.whereTitle}
-            </h2>
-            <ZoneMap zones={zones} />
-            <DataTable zones={zones} />
-          </section>
-
-          <section className="section">
-            <h2>
-              <span className="number">02</span> {t.whatTitle}
-            </h2>
-            <div className="columns">
-              <div>
-                <h3>{t.perWeek}</h3>
-                <WeeklyBars weekly={stats.weekly} />
+      <main id="top">
+        <section className="hero">
+          <div className="container hero-grid">
+            <div>
+              <h1>{t.title}</h1>
+              <p className="lead">{t.lead}</p>
+              <div className="actions">
+                <a className="button button-primary" href={REPO_URL} target="_blank" rel="noreferrer">
+                  {t.ctaCode}
+                </a>
+                <a className="button button-secondary" href="#map">
+                  {t.ctaMap}
+                </a>
               </div>
-              <div>
-                <h3>{t.threatType}</h3>
-                <RankedBars rows={threatRows} unit={t.reports} />
-              </div>
-              <div>
-                <h3>{t.cities}</h3>
-                <RankedBars rows={cityRows} unit={t.reports} />
-              </div>
-              <div>
-                <h3>{t.domains}</h3>
-                <RankedBars rows={domainRows} unit={t.reports} mono />
-              </div>
+              <p className="availability">{t.availability}</p>
             </div>
-          </section>
+            <PhoneShot src={suspectScreen} alt={t.heroAlt} />
+          </div>
+        </section>
 
-          <section className="section">
-            <h2>
-              <span className="number">03</span> {t.scanTitle}
-            </h2>
+        <section id="features" className="section section-alt">
+          <div className="container">
+            <h2>{t.featuresTitle}</h2>
+            <Features />
+          </div>
+        </section>
+
+        <section id="how" className="section">
+          <div className="container">
+            <h2>{t.howTitle}</h2>
             <ol className="steps">
-              {t.steps.map((step) => (
+              {t.steps.map((step, index) => (
                 <li key={step.title}>
+                  <span className="step-number">{index + 1}</span>
                   <h3>{step.title}</h3>
                   <p>{step.text}</p>
                 </li>
               ))}
             </ol>
-          </section>
+          </div>
+        </section>
 
-          <section className="section">
-            <h2>
-              <span className="number">04</span> {t.privacyTitle}
-            </h2>
-            <p className="section-intro">{t.privacyIntro}</p>
-            <ul className="checks">
-              {t.privacy.map((item) => (
-                <li key={item}>{item}</li>
+        <section className="section section-alt">
+          <div className="container">
+            <h2>{t.screensTitle}</h2>
+            <p className="section-intro">{t.screensIntro}</p>
+            <ul className="screens">
+              {t.screens.map((screen, index) => (
+                <li key={screen.caption}>
+                  <PhoneShot src={SCREENS[index]} alt={screen.alt} />
+                  <p>{screen.caption}</p>
+                </li>
               ))}
             </ul>
-          </section>
+          </div>
+        </section>
 
-          <section className="section">
-            <h2>
-              <span className="number">05</span> {t.bugsTitle}
-            </h2>
-            <p className="section-intro">{t.bugsIntro}</p>
-            <div className="lessons">
-              {t.bugs.map((lesson) => (
-                <article key={lesson.title}>
-                  <h3>{lesson.title}</h3>
-                  <p>{lesson.text}</p>
-                </article>
+        <section id="map" className="section">
+          <div className="container">
+            <h2>{t.mapTitle}</h2>
+            <p className="section-intro">{t.mapIntro}</p>
+            {showDemo && <p className="note">{t.demoNote}</p>}
+
+            {failed && <p className="state">{t.unavailable}</p>}
+            {!failed && !stats && <p className="state">{t.loading}</p>}
+
+            {stats && (
+              <>
+                <dl className="figures" aria-label={t.figuresLabel}>
+                  <div className="card">
+                    <dt>{t.reports}</dt>
+                    <dd className="figure-value">{formatNumber(stats.total_reports)}</dd>
+                  </div>
+                  <div className="card">
+                    <dt>{t.dangerousLinks}</dt>
+                    <dd className="figure-value">{formatNumber(stats.dangerous_reports)}</dd>
+                  </div>
+                  <div className="card">
+                    <dt>{t.areas}</dt>
+                    <dd className="figure-value">{formatNumber(stats.zones)}</dd>
+                  </div>
+                </dl>
+
+                <ZoneMap zones={zones} />
+                <DataTable zones={zones} />
+
+                <div className="charts">
+                  <div className="card">
+                    <h3>{t.perWeek}</h3>
+                    <WeeklyBars weekly={stats.weekly} />
+                  </div>
+                  <div className="card">
+                    <h3>{t.threatType}</h3>
+                    <RankedBars rows={threatRows} unit={t.reports} />
+                    <p className="period">{t.period(stats.period_days)}</p>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+        </section>
+
+        <section id="privacy" className="section section-alt">
+          <div className="container">
+            <h2>{t.privacyTitle}</h2>
+            <p className="section-intro">{t.privacyIntro}</p>
+            <ul className="privacy">
+              {t.privacy.map((item) => (
+                <li key={item.title} className="card">
+                  <h3>{item.title}</h3>
+                  <p>{item.text}</p>
+                </li>
               ))}
-            </div>
-          </section>
-        </main>
-      )}
+            </ul>
+          </div>
+        </section>
+      </main>
 
       <footer className="footer">
-        <p>{t.footer}</p>
-        <p className="stack">FastAPI · PostgreSQL + PostGIS · React Native · React · Docker</p>
+        <div className="container footer-row">
+          <p>{t.footer}</p>
+          <p>FastAPI · PostgreSQL + PostGIS · React Native · React · Docker</p>
+        </div>
       </footer>
-    </div>
+    </>
   );
 }

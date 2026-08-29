@@ -8,10 +8,9 @@ interface RankedRow {
 interface RankedBarsProps {
   rows: RankedRow[];
   unit: string;
-  mono?: boolean;
 }
 
-export default function RankedBars({ rows, unit, mono = false }: RankedBarsProps) {
+export default function RankedBars({ rows, unit }: RankedBarsProps) {
   const { locale, t } = useLang();
 
   if (rows.length === 0) {
@@ -21,7 +20,7 @@ export default function RankedBars({ rows, unit, mono = false }: RankedBarsProps
   const maximum = rows.reduce((highest, row) => Math.max(highest, row.value), 0);
 
   return (
-    <ul className={mono ? "ranked ranked-mono" : "ranked"}>
+    <ul className="ranked">
       {rows.map((row) => (
         <li key={row.label} className="ranked-row" title={`${row.value} ${unit}`}>
           <div className="ranked-head">

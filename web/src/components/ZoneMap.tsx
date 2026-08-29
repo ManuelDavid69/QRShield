@@ -53,10 +53,10 @@ export default function ZoneMap({ zones }: ZoneMapProps) {
 
       L.circleMarker([zone.latitude, zone.longitude], {
         radius,
-        color: "#fffdf8",
+        color: "#ffffff",
         weight: 2,
         fillOpacity: 0.75,
-        fillColor: mostlyDangerous ? "#c8321e" : "#d9920f",
+        fillColor: mostlyDangerous ? "#dc2626" : "#d97706",
       })
         .bindTooltip(
           `<strong>${city}</strong><br />${t.mapTooltip(zone.reports, zone.dangerous)}`,
@@ -83,6 +83,6 @@ export default function ZoneMap({ zones }: ZoneMapProps) {
         </span>
         <span>{t.legendSize}</span>
       </div>
-          </div>
+    </div>
   );
 }

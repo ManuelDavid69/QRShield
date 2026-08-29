@@ -11,6 +11,8 @@ from threading import Lock
 
 from fastapi import HTTPException, Request, status
 
+from app.config import get_settings
+
 
 class RateLimiter:
     def __init__(self, limit: int, window_seconds: int) -> None:
@@ -39,6 +41,13 @@ class RateLimiter:
 
 
 def client_ip(request: Request) -> str:
+    # Derrière un proxy, l'adresse vue est la sienne : tout le monde partagerait le même compteur.
+    # On compte depuis la droite, car le début de X-Forwarded-For est écrit par le client lui-même.
+    hops = get_settings().trusted_proxy_hops
+    if hops > 0:
+        forwarded = [part.strip() for part in request.headers.get("x-forwarded-for", "").split(",") if part.strip()]
+        if len(forwarded) >= hops:
+            return forwarded[-hops]
     return request.client.host if request.client else "inconnu"
 
 

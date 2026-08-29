@@ -1,6 +1,7 @@
 """Tâche de fond lancée dans son propre conteneur : python -m app.worker"""
 
 import logging
+import sys
 import time
 
 from app.config import get_settings
@@ -30,13 +31,22 @@ def run_once(pause_seconds: float = PAUSE_SECONDS) -> int:
         )
 
 
+def run_cycle() -> None:
+    logger.info("%d liens réanalysés", run_once())
+    with SessionLocal() as db:
+        logger.info("%d sessions expirées supprimées", purge_expired_tokens(db))
+
+
 def main() -> None:
+    # --once : une seule passe, pour une tâche planifiée plutôt qu'un service permanent
+    if "--once" in sys.argv:
+        run_cycle()
+        return
+
     interval = get_settings().reclassification_interval_minutes * 60
     while True:
         try:
-            logger.info("%d liens réanalysés", run_once())
-            with SessionLocal() as db:
-                logger.info("%d sessions expirées supprimées", purge_expired_tokens(db))
+            run_cycle()
         except Exception:
             # Une panne passagère (base, réseau) ne doit pas arrêter le service
             logger.exception("échec de la réanalyse")

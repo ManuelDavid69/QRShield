@@ -17,6 +17,8 @@ class Settings(BaseSettings):
     reclassification_interval_minutes: int = 60
     reclassification_batch: int = 20
     app_name: str = "QRShield API"
+    # Nombre de proxys de confiance devant l'API (0 en local, 1 derrière Render)
+    trusted_proxy_hops: int = 0
 
     # 32 caractères minimum, sinon une clé HS256 se bruteforce trop facilement
     jwt_secret_key: str = Field(min_length=32)

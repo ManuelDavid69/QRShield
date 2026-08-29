@@ -1,3 +1,7 @@
+from fastapi import Request
+
+from app.config import get_settings
+from app.security.rate_limit import client_ip
 """Tests unitaires du limiteur de débit en mémoire."""
 
 import pytest
@@ -50,3 +54,24 @@ def test_enforce_leve_429_avec_retry_after():
 
     assert exc.value.status_code == 429
     assert exc.value.headers["Retry-After"] == "30"
+
+
+def _request(forwarded: str | None) -> Request:
+    headers = [(b"x-forwarded-for", forwarded.encode())] if forwarded else []
+    return Request({"type": "http", "headers": headers, "client": ("10.0.0.9", 1234)})
+
+
+@pytest.mark.parametrize(
+    "hops, forwarded, expected",
+    [
+        (0, "1.1.1.1", "10.0.0.9"),
+        (1, "8.8.8.8", "8.8.8.8"),
+        # Le client peut inventer le début de l'en-tête, jamais ce qu'ajoute le proxy
+        (1, "1.2.3.4, 8.8.8.8", "8.8.8.8"),
+        (2, "1.2.3.4, 8.8.8.8, 9.9.9.9", "8.8.8.8"),
+        (1, None, "10.0.0.9"),
+    ],
+)
+def test_client_ip_derriere_un_proxy(monkeypatch, hops, forwarded, expected):
+    monkeypatch.setattr(get_settings(), "trusted_proxy_hops", hops)
+    assert client_ip(_request(forwarded)) == expected

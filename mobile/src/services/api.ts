@@ -88,8 +88,8 @@ export class ApiError extends Error {
   }
 }
 
-// L'analyse suit des redirections et interroge plusieurs services, elle peut prendre 15 s
-const TIMEOUT_MS = 35_000;
+// L'analyse peut prendre 15 s, et un hébergement gratuit met environ une minute à se réveiller
+const TIMEOUT_MS = 80_000;
 
 function apiBaseUrl(): string {
   const fromEnv = process.env.EXPO_PUBLIC_API_URL;

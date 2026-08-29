@@ -85,6 +85,12 @@ npm run api-proxy
 
 L'application déduit l'adresse du PC de celle du serveur Expo et contacte l'API sur le port 8001. Pour viser une autre adresse, il suffit de définir `EXPO_PUBLIC_API_URL`.
 
+### Déploiement
+
+Tout fonctionne sur des offres gratuites. La page de démonstration est sur GitHub Pages, la base de données sur Neon (qui prend en charge PostGIS, sans limite de durée) et l'API sur Render, décrite dans `render.yaml`. L'offre gratuite de Render ne propose pas de service en arrière-plan : une tâche planifiée GitHub Actions (`reclassify.yml`) lance donc `python -m app.worker --once` toutes les six heures.
+
+L'API gratuite se met en veille après 15 minutes sans trafic et met environ une minute à redémarrer. La page de démonstration continue donc de lire un fichier statique et reste instantanée. Derrière un proxy, l'adresse vue par l'API est celle du proxy : la limitation de débit lit donc `X-Forwarded-For` depuis la droite, grâce à `TRUSTED_PROXY_HOPS`, car le début de cet en-tête est écrit par le client et pourrait être falsifié.
+
 ## Tests
 
 ```bash
@@ -104,7 +110,7 @@ npm run typecheck   # vérification TypeScript
 
 ### Tests de bout en bout
 
-Le dossier `e2e/` contient 28 tests Playwright qui s'exécutent sur la vraie pile : API, base PostGIS et services de réputation. Ils couvrent l'API, la page web et le parcours complet de l'application, de l'inscription à la suppression d'un scan. Ils vérifient par exemple que le mot de passe Wi-Fi ne figure jamais dans la requête envoyée au serveur, ou qu'un signalement annulé ne change rien aux chiffres publics.
+Le dossier `e2e/` contient 29 tests Playwright qui s'exécutent sur la vraie pile : API, base PostGIS et services de réputation. Ils couvrent l'API, la page web et le parcours complet de l'application, de l'inscription à la suppression d'un scan. Ils vérifient par exemple que le mot de passe Wi-Fi ne figure jamais dans la requête envoyée au serveur, ou qu'un signalement annulé ne change rien aux chiffres publics.
 
 ```bash
 docker compose up -d

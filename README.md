@@ -85,6 +85,12 @@ npm run api-proxy
 
 The app infers the PC address from the Expo server address and contacts the API on port 8001. To target another address, simply set `EXPO_PUBLIC_API_URL`.
 
+### Deployment
+
+Everything runs on free plans. The demo page is on GitHub Pages, the database on Neon (it supports PostGIS and has no time limit), and the API on Render, described in `render.yaml`. Render's free plan has no background workers, so a scheduled GitHub Actions job (`reclassify.yml`) runs `python -m app.worker --once` every six hours instead.
+
+The free API goes to sleep after 15 minutes without traffic and takes about a minute to wake up, so the demo page keeps reading a static file and stays instant. Behind a proxy, the address seen by the API is the proxy's, so rate limiting reads `X-Forwarded-For` from the right, using `TRUSTED_PROXY_HOPS`: the left part of that header is written by the client and could be forged.
+
 ## Tests
 
 ```bash
@@ -104,7 +110,7 @@ On every push to GitHub, continuous integration runs the backend tests against a
 
 ### End-to-end tests
 
-The `e2e/` folder contains 28 Playwright tests that run against the real stack: API, PostGIS database, and reputation services. They cover the API, the web page, and the full app flow, from sign-up to deleting a scan. They verify, for example, that the Wi-Fi password never appears in the request sent to the server, or that a canceled report does not change the public figures.
+The `e2e/` folder contains 29 Playwright tests that run against the real stack: API, PostGIS database, and reputation services. They cover the API, the web page, and the full app flow, from sign-up to deleting a scan. They verify, for example, that the Wi-Fi password never appears in the request sent to the server, or that a canceled report does not change the public figures.
 
 ```bash
 docker compose up -d

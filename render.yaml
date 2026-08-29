@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: qrshield-api
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    plan: free
+    region: frankfurt
+    # /docs ne touche pas la base : le contrôle de santé ne doit pas réveiller Neon
+    healthCheckPath: /docs
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: GOOGLE_SAFE_BROWSING_API_KEY
+        sync: false
+      - key: VIRUSTOTAL_API_KEY
+        sync: false
+      - key: JWT_SECRET_KEY
+        generateValue: true
+      - key: COMMUNITY_SECRET
+        generateValue: true
+      - key: CORS_ORIGINS
+        value: https://manueldavid69.github.io
+      - key: TRUSTED_PROXY_HOPS
+        value: "1"

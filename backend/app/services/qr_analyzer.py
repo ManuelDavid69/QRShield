@@ -65,18 +65,21 @@ def redirect_signals(initial_url: str, fetch: FetchResult) -> list[Signal]:
             "url_shortener",
             Severity.LOW,
             f"Le lien passe par un raccourcisseur ({first}) qui masque sa vraie destination.",
+            params={"domain": first},
         ))
     elif first and final and first != final:
         signals.append(Signal(
             "domain_change",
             Severity.LOW,
             f"Le lien redirige de {first} vers un autre site : {final}.",
+            params={"from": first, "to": final},
         ))
     if redirects >= 3:
         signals.append(Signal(
             "many_redirects",
             Severity.LOW,
             f"Le lien passe par {redirects} redirections avant d'arriver à destination.",
+            params={"count": str(redirects)},
         ))
 
     error = fetch.error
@@ -87,6 +90,7 @@ def redirect_signals(initial_url: str, fetch: FetchResult) -> list[Signal]:
             Severity.HIGH,
             f"Le site redirige vers une adresse « {target}: » qui peut ouvrir une application "
             "ou lancer une action sur le téléphone.",
+            params={"target": target},
         ))
     elif error == FetchError.BLOCKED_ADDRESS:
         signals.append(Signal(
@@ -158,6 +162,7 @@ class UrlAnalyzer:
             "safe_browsing",
             Severity.CRITICAL,
             f"Ce lien est référencé comme dangereux par Google Safe Browsing ({labels}).",
+            params={"threats": ",".join(threats)},
         )], {"threats": threats}
 
     def _check_virustotal(self, url: str) -> tuple[list[Signal], Any]:
@@ -184,6 +189,7 @@ class UrlAnalyzer:
             severity,
             f"{stats.malicious} antivirus sur VirusTotal considèrent ce lien comme malveillant"
             + (f" et {stats.suspicious} comme suspect." if stats.suspicious else "."),
+            params={"malicious": str(stats.malicious), "suspicious": str(stats.suspicious)},
         )], detail
 
     def _check_domain_age(self, domain: str | None) -> tuple[list[Signal], Any]:
@@ -202,12 +208,14 @@ class UrlAnalyzer:
                 Severity.HIGH,
                 f"Le site {domain} a été créé il y a seulement {age} jour(s). Les sites d'arnaque "
                 "sont souvent tout neufs, car ils sont fermés rapidement.",
+                params={"domain": domain, "age": str(age)},
             )], age
         if age < RECENT_DOMAIN_DAYS:
             return [Signal(
                 "recent_domain",
                 Severity.MEDIUM,
                 f"Le site {domain} existe depuis moins de trois mois ({age} jours).",
+                params={"domain": domain, "age": str(age)},
             )], age
         return [], age
 

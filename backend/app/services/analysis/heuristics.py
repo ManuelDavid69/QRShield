@@ -97,6 +97,7 @@ def _impersonation(brand: Brand, parts: DomainParts, severity: Severity) -> Sign
         severity,
         f"Le domaine {parts.registered} utilise le nom « {brand.name} » mais n'appartient pas "
         f"à {brand.name} (site officiel : {brand.main_domain}).",
+        params={"domain": parts.registered, "brand": brand.name, "official": brand.main_domain},
     )
 
 
@@ -112,6 +113,7 @@ def _match_brand(brand: Brand, parts: DomainParts) -> Signal | None:
             Severity.HIGH,
             f"Le domaine s'affiche « {decoded}.{parts.suffix} » mais certaines lettres viennent d'un "
             f"autre alphabet : c'est une imitation de {brand.main_domain}.",
+            params={"shown": f"{decoded}.{parts.suffix}", "official": brand.main_domain},
         )
 
     if compact == keyword:
@@ -132,6 +134,7 @@ def _match_brand(brand: Brand, parts: DomainParts) -> Signal | None:
                 Severity.HIGH,
                 f"Le domaine {parts.registered} imite {brand.main_domain} en remplaçant des lettres "
                 "par des caractères qui leur ressemblent.",
+                params={"domain": parts.registered, "official": brand.main_domain},
             )
         # "paypalsecure", "netflix-compte" : la marque collée à d'autres mots
         if len(keyword) >= 6 and keyword in compact:
@@ -146,6 +149,7 @@ def _match_brand(brand: Brand, parts: DomainParts) -> Signal | None:
                     Severity.HIGH if len(keyword) >= 6 else Severity.MEDIUM,
                     f"Le domaine {parts.registered} ressemble beaucoup à {brand.main_domain}, "
                     "à une ou deux lettres près.",
+                    params={"domain": parts.registered, "official": brand.main_domain},
                 )
 
     sub_tokens = _tokens(parts.subdomain)
@@ -157,6 +161,7 @@ def _match_brand(brand: Brand, parts: DomainParts) -> Signal | None:
             Severity.MEDIUM if brand.strict else Severity.HIGH,
             f"L'adresse commence par « {brand.name} », mais le site qui s'ouvre est en réalité "
             f"{parts.registered}.",
+            params={"brand": brand.name, "domain": parts.registered},
         )
     return None
 
@@ -194,6 +199,7 @@ def url_signals(url: str) -> list[Signal]:
             "userinfo_trick",
             Severity.HIGH,
             f"L'adresse contient un « @ » : tout ce qui précède est ignoré, le lien mène en réalité vers {host}.",
+            params={"host": host},
         ))
 
     if is_ip_literal(host):
@@ -215,6 +221,7 @@ def url_signals(url: str) -> list[Signal]:
                 Severity.MEDIUM,
                 f"Le nom de domaine contient des caractères non latins ({readable}), "
                 "une technique utilisée pour imiter visuellement un autre site.",
+                params={"shown": readable},
             ))
         tld = parts.suffix.rsplit(".", 1)[-1]
         if tld in SUSPICIOUS_TLDS:
@@ -222,6 +229,7 @@ def url_signals(url: str) -> list[Signal]:
                 "suspicious_tld",
                 Severity.LOW,
                 f"L'extension .{tld} est très utilisée par les sites frauduleux.",
+                params={"tld": tld},
             ))
         if len(_tokens(parts.subdomain)) >= 4:
             signals.append(Signal(
@@ -241,6 +249,7 @@ def url_signals(url: str) -> list[Signal]:
             Severity.HIGH,
             f"Le lien télécharge directement un fichier .{ext}. Une application ou un programme "
             "installé depuis un QR code peut prendre le contrôle du téléphone.",
+            params={"ext": ext},
         ))
 
     return signals

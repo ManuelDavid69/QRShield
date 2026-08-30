@@ -143,6 +143,16 @@ def remove_reports_if_last_scan(db: Session, user_id: uuid.UUID, analysis_id: uu
     db.execute(delete(CommunityReport).where(CommunityReport.reporter_hash.in_(hashes)))
 
 
+def remove_user_reports(db: Session, user_id: uuid.UUID, analysis_ids: set[uuid.UUID]) -> None:
+    hashes = [
+        reporter_hash(user_id, analysis_id, source)
+        for analysis_id in analysis_ids
+        for source in ReportSource
+    ]
+    if hashes:
+        db.execute(delete(CommunityReport).where(CommunityReport.reporter_hash.in_(hashes)))
+
+
 def community_signals(db: Session, domain: str | None, analysis_id: uuid.UUID) -> list[Signal]:
     """Apport de la communauté au score d'une URL.
 
@@ -180,12 +190,14 @@ def community_signals(db: Session, domain: str | None, analysis_id: uuid.UUID) -
             "community_reports",
             Severity.HIGH if user_reports >= USER_REPORTS_HIGH else Severity.MEDIUM,
             f"{user_reports} utilisateurs de QRShield ont signalé ce site.",
+            params={"count": str(user_reports)},
         ))
     if other_dangerous:
         signals.append(Signal(
             "community_domain",
             Severity.MEDIUM,
             f"D'autres liens de {domain} ont déjà été classés dangereux.",
+            params={"domain": domain},
         ))
     return signals
 

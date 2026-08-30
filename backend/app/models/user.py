@@ -18,6 +18,7 @@ class User(Base):
     # Email stocké en minuscules pour que l'unicité soit effective (a@b == A@b)
     email: Mapped[str] = mapped_column(String(320), unique=True, index=True, nullable=False)
     password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
+    recovery_code_hash: Mapped[str | None] = mapped_column(String(255), nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, server_default="true", nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
@@ -28,6 +29,10 @@ class User(Base):
         cascade="all, delete-orphan",
         passive_deletes=True,
     )
+
+    @property
+    def has_recovery_code(self) -> bool:
+        return self.recovery_code_hash is not None
 
     @validates("email")
     def _normalize_email(self, _key: str, value: str) -> str:

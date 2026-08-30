@@ -75,6 +75,14 @@ def revoke_refresh_token(db: Session, raw_token: str) -> None:
         db.commit()
 
 
+def revoke_all_refresh_tokens(db: Session, user_id: uuid.UUID) -> None:
+    db.execute(
+        update(RefreshToken)
+        .where(RefreshToken.user_id == user_id, RefreshToken.revoked_at.is_(None))
+        .values(revoked_at=datetime.now(UTC))
+    )
+
+
 def purge_expired_tokens(db: Session) -> int:
     result = db.execute(delete(RefreshToken).where(RefreshToken.expires_at <= datetime.now(UTC)))
     db.commit()

@@ -24,6 +24,8 @@ class ReasonOut(BaseModel):
     code: str
     severity: str
     message: str
+    # Absent des analyses antérieures à la traduction : l'appli garde alors le message français
+    params: dict[str, str] = {}
 
 
 class AnalysisOut(BaseModel):

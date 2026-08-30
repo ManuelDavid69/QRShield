@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import StrEnum
 
 
@@ -17,6 +17,8 @@ class Signal:
     code: str
     severity: Severity
     message: str
+    # Valeurs du message, pour que l'appli puisse le traduire à partir de son code
+    params: dict[str, str] = field(default_factory=dict, compare=False, hash=False)
 
-    def to_dict(self) -> dict[str, str]:
-        return {"code": self.code, "severity": self.severity.value, "message": self.message}
+    def to_dict(self) -> dict[str, str | dict[str, str]]:
+        return {"code": self.code, "severity": self.severity.value, "message": self.message, "params": self.params}

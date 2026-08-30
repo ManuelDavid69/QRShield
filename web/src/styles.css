@@ -289,31 +289,6 @@ h1 {
   color: var(--muted);
 }
 
-/* Exemple : texte à gauche, vraie réponse de l'API à droite */
-
-.example {
-  display: grid;
-  grid-template-columns: minmax(0, 4fr) minmax(0, 5fr);
-  gap: 48px;
-  align-items: start;
-}
-
-.example p {
-  margin-top: 14px;
-}
-
-.code {
-  margin: 0;
-  padding: 18px 20px;
-  overflow-x: auto;
-  background: #23272e;
-  border-radius: 6px;
-  color: #e6e6e6;
-  font-family: ui-monospace, Consolas, Menlo, monospace;
-  font-size: 13.5px;
-  line-height: 1.5;
-}
-
 .after {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
@@ -529,7 +504,6 @@ td {
 
   .hero-grid,
   .checks,
-  .example,
   .after,
   .privacy {
     grid-template-columns: minmax(0, 1fr);
@@ -577,10 +551,6 @@ td {
 
   .header-actions {
     gap: 12px;
-  }
-
-  .code {
-    font-size: 12.5px;
   }
 
   .map {

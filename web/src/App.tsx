@@ -3,7 +3,6 @@ import dangerScreen from "./assets/screens/danger.png";
 import historyScreen from "./assets/screens/history.png";
 import statsScreen from "./assets/screens/stats.png";
 import suspectScreen from "./assets/screens/suspect.png";
-import AnalysisExample from "./components/AnalysisExample";
 import DataTable from "./components/DataTable";
 import PhoneShot from "./components/PhoneShot";
 import RankedBars from "./components/RankedBars";
@@ -76,7 +75,6 @@ export default function App() {
           </a>
           <nav className="nav-links">
             <a href="#checks">{t.navChecks}</a>
-            <a href="#example">{t.navExample}</a>
             <a href="#map">{t.navMap}</a>
             <a href="#privacy">{t.navPrivacy}</a>
           </nav>
@@ -137,13 +135,7 @@ export default function App() {
           </div>
         </section>
 
-        <section id="example" className="section section-alt">
-          <div className="container">
-            <AnalysisExample />
-          </div>
-        </section>
-
-        <section className="section">
+        <section className="section section-alt">
           <div className="container after">
             <div>
               <h2>{t.afterTitle}</h2>
@@ -162,7 +154,7 @@ export default function App() {
           </div>
         </section>
 
-        <section id="map" className="section section-alt">
+        <section id="map" className="section">
           <div className="container">
             <h2>{t.mapTitle}</h2>
             <p className="section-intro">{t.mapIntro}</p>
@@ -198,7 +190,7 @@ export default function App() {
           </div>
         </section>
 
-        <section id="privacy" className="section">
+        <section id="privacy" className="section section-alt">
           <div className="container privacy">
             <div>
               <h2>{t.privacyTitle}</h2>
@@ -214,7 +206,7 @@ export default function App() {
           </div>
         </section>
 
-        <section className="section section-alt">
+        <section className="section">
           <div className="container tech">
             <h2>{t.techTitle}</h2>
             {t.tech.map((paragraph) => (

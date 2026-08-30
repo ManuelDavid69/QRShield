@@ -270,6 +270,17 @@ Les tests sur téléphone ont révélé un second problème : sur Android, `expo
 
 ## Sécurité
 
+### Ce que QRShield protège, et ce qu'il ne protège pas
+
+L'attaque que je vise est simple : quelqu'un colle un faux QR code sur un horodateur ou un menu, et le lien mène vers une page de phishing ou un fichier à installer. QRShield montre la vraie destination et les raisons du score avant d'ouvrir quoi que ce soit.
+
+Deux autres risques viennent du projet lui-même. Le serveur suit des liens choisis par n'importe qui, donc un QR code pourrait viser son réseau interne : les adresses privées sont refusées. La carte publique pourrait aussi révéler où passent les gens, ce qui m'a réellement posé problème : dans ma première version, deux scans du même compte suffisaient à publier une zone proche de ma position. Le seuil compte maintenant des personnes.
+
+L'analyse a ses limites. Le serveur lit les en-têtes sans charger la page, donc il ne voit pas ce qu'elle affiche. Un site de phishing tout neuf, qui n'imite aucune marque, peut obtenir un bon score. De faux comptes peuvent aussi rendre un site suspect, mais le poids des signalements est plafonné pour qu'ils ne puissent pas le rendre dangereux à eux seuls. Enfin, la limitation de débit est gardée en mémoire et repart à zéro quand le serveur redémarre.
+
+### Mesures en place
+
+- Les dépendances sont auditées à chaque push avec `pip-audit` et `npm audit`. Pour l'application, le seuil est fixé à « critique », car les alertes élevées restantes viennent de la CLI Expo, qui ne fait pas partie de l'APK, et leur correctif automatique rétrograderait Expo.
 - Les secrets (mots de passe, clés d'API, clé JWT) se trouvent uniquement dans `.env`, qui n'est pas versionné. Le fichier `.env.example` sert de modèle.
 - Le conteneur de l'API ne tourne pas en root et PostgreSQL n'est exposé que sur `127.0.0.1`.
 - En cas d'erreur de base de données, l'API ne renvoie jamais le message d'erreur brut, qui pourrait donner des informations sur l'infrastructure.

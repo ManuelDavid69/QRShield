@@ -272,6 +272,17 @@ Tests on a phone revealed a second problem: on Android, `expo-camera` ignores th
 
 ## Security
 
+### What QRShield protects, and what it does not
+
+The attack I am targeting is simple: someone sticks a fake QR code on a parking meter or a menu, and the link leads to a phishing page or a file to install. QRShield shows the real destination and the reasons behind the score before anything is opened.
+
+Two other risks come from the project itself. The server follows links chosen by anyone, so a QR code could target its internal network: private addresses are refused. The public map could also reveal where people go, which actually happened to me: in my first version, two scans from the same account were enough to publish an area close to my position. The threshold now counts people.
+
+The analysis has its limits. The server reads headers without loading the page, so it does not see what the page displays. A brand new phishing site that imitates no brand can get a good score. Fake accounts can also make a site look suspicious, but the weight of reports is capped so that they cannot make it dangerous on their own. Finally, rate limiting is kept in memory and resets when the server restarts.
+
+### Measures in place
+
+- Dependencies are audited on every push with `pip-audit` and `npm audit`. For the app, the threshold is set to critical, because the remaining high alerts come from the Expo CLI, which is not part of the APK, and their automatic fix would downgrade Expo.
 - Secrets (passwords, API keys, JWT key) are only in `.env`, which is not versioned. The `.env.example` file serves as a template.
 - The API container does not run as root and PostgreSQL is exposed only on `127.0.0.1`.
 - On a database error, the API never returns the raw error message, which could reveal information about the infrastructure.

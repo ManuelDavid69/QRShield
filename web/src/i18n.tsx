@@ -51,13 +51,13 @@ const en = {
   privacy: [
     { title: "No link to you.", text: "A report is not tied to your account or to your scan." },
     { title: "Approximate locations.", text: "Positions are rounded to a grid of about 1 km." },
-    { title: "No isolated points.", text: "An area only appears once it has at least two reports." },
+    { title: "No isolated points.", text: "An area only appears once at least two different people have reported in it." },
     { title: "Wi-Fi passwords.", text: "They are removed before a scan leaves your phone." },
   ],
   techTitle: "How it is built",
   tech: [
     "The backend is written in Python with FastAPI, and the data is stored in PostgreSQL with PostGIS for the map. I chose React Native with Expo for the app because I develop on Windows and can still build for Android and iOS.",
-    "The project has 273 backend tests, 56 mobile tests and 29 end-to-end tests. Some bugs still only showed up on a real phone, and the README describes them.",
+    "The project has 277 backend tests, 56 mobile tests and 29 end-to-end tests. Some bugs still only showed up on a real phone, and the README describes them.",
   ],
   techLink: "Read the full README",
   footer: "Manuel David, CPE Lyon",
@@ -122,13 +122,13 @@ const fr: Messages = {
   privacy: [
     { title: "Aucun lien avec vous.", text: "Un signalement n'est rattaché ni à votre compte ni à votre scan." },
     { title: "Positions approximatives.", text: "Les positions sont arrondies à une maille d'environ 1 km." },
-    { title: "Aucun point isolé.", text: "Une zone n'apparaît qu'à partir de deux signalements." },
+    { title: "Aucun point isolé.", text: "Une zone n'apparaît que si au moins deux personnes différentes y ont fait un signalement." },
     { title: "Mots de passe Wi-Fi.", text: "Ils sont retirés avant qu'un scan ne quitte votre téléphone." },
   ],
   techTitle: "Comment c'est construit",
   tech: [
     "Le backend est écrit en Python avec FastAPI, et les données sont stockées dans PostgreSQL avec PostGIS pour la carte. J'ai choisi React Native avec Expo pour l'application, car je développe sous Windows et je peux tout de même compiler pour Android et iOS.",
-    "Le projet compte 273 tests backend, 56 tests mobiles et 29 tests de bout en bout. Certains bugs ne sont pourtant apparus que sur un vrai téléphone, et le README les décrit.",
+    "Le projet compte 277 tests backend, 56 tests mobiles et 29 tests de bout en bout. Certains bugs ne sont pourtant apparus que sur un vrai téléphone, et le README les décrit.",
   ],
   techLink: "Lire le README complet",
   footer: "Manuel David, CPE Lyon",

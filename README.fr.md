@@ -215,9 +215,11 @@ Une carte publique de ce type révèle facilement où passent les gens. J'ai don
 - La position est ramenée au centre d'une maille d'environ un kilomètre.
 - La date est conservée au jour près. Une heure précise permettrait de retrouver le scan correspondant.
 - Seul le domaine est publié, car une URL complète peut contenir des données personnelles.
-- Une zone ou un domaine n'apparaît publiquement qu'à partir de deux signalements : une zone avec un seul signalement désignerait le passage d'une seule personne.
+- Une zone ou un domaine n'apparaît publiquement que si au moins deux personnes différentes l'ont signalé : une zone signalée par une seule personne désignerait son passage, quel que soit le nombre de signalements.
 
-Il faut tout de même éviter qu'une même personne compte plusieurs fois. Chaque signalement porte donc une empreinte HMAC calculée à partir de l'utilisateur, de l'URL et d'une clé secrète. Elle est identique pour une même personne et une même URL, ce qui bloque les doublons, mais elle change d'une URL à l'autre : il est impossible de relier deux signalements entre eux, et impossible de vérifier si un utilisateur donné a signalé un lien sans connaître la clé. Supprimer un scan retire aussi les signalements associés.
+Il faut tout de même éviter qu'une même personne compte plusieurs fois. Chaque signalement porte donc une empreinte HMAC calculée à partir de l'utilisateur, de l'URL et d'une clé secrète. Elle est identique pour une même personne et une même URL, ce qui bloque les doublons. Deux autres empreintes, propres à une maille et à un domaine, servent à compter les personnes distinctes avant toute publication. Sans la clé, il est impossible de vérifier si un utilisateur donné a signalé un lien, et ces empreintes ne sont jamais publiées. Supprimer un scan retire aussi les signalements associés.
+
+Cette règle vient d'un test en production. Ma première version comptait des signalements et non des personnes : avec deux scans à risque sur mon téléphone, l'API publique a affiché une zone proche de ma position. Les signalements créés avant cette correction ne permettent plus de publier une zone, car rien ne permet de retrouver leur auteur.
 
 ### Apport au score
 

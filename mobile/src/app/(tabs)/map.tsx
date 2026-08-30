@@ -47,7 +47,7 @@ export default function MapScreen() {
           <Text style={styles.legendText}>Majorité de liens suspects</Text>
         </View>
         <Text style={styles.note}>
-          Signalements anonymes des 90 derniers jours. Une zone apparaît à partir de deux signalements.
+          Signalements anonymes des 90 derniers jours. Une zone apparaît à partir de deux personnes différentes.
         </Text>
       </View>
     </View>

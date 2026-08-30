@@ -215,9 +215,11 @@ A public map of this kind easily reveals where people go. I therefore designed t
 - The location is snapped to the center of a grid cell about one kilometer wide.
 - The date is kept to the day. A precise time would make it possible to find the corresponding scan.
 - Only the domain is published, because a full URL can contain personal data.
-- An area or a domain is only shown publicly once it has at least two reports: an area with a single report would point to a single person passing through.
+- An area or a domain is only shown publicly once at least two different people have reported it: an area reported by one person would point to that person passing through, however many reports they made.
 
-Still, the same person must not be counted more than once. Each report therefore carries an HMAC fingerprint computed from the user, the URL and a secret key. It is identical for the same person and the same URL, which blocks duplicates, but it changes from one URL to another: it is impossible to link two reports together, and impossible to check whether a given user reported a link without knowing the key. Deleting a scan also removes the associated reports.
+Still, the same person must not be counted more than once. Each report therefore carries an HMAC fingerprint computed from the user, the URL and a secret key. It is identical for the same person and the same URL, which blocks duplicates. Two other fingerprints, specific to a grid cell and to a domain, are used to count distinct people before anything is published. Without the key, it is impossible to check whether a given user reported a link, and these fingerprints are never published. Deleting a scan also removes the associated reports.
+
+This rule comes from a test in production. My first version counted reports rather than people: after two risky scans on my phone, the public API showed an area close to my position. Reports created before this fix can no longer publish an area, since nothing can trace who made them.
 
 ### Contribution to the score
 

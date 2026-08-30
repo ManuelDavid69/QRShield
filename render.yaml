@@ -21,5 +21,6 @@ services:
         generateValue: true
       - key: CORS_ORIGINS
         value: https://manueldavid69.github.io
+      # Mesuré en ligne : avec 1, deux clients d'adresses différentes partageaient le même compteur
       - key: TRUSTED_PROXY_HOPS
-        value: "1"
+        value: "2"

@@ -4,11 +4,14 @@ import { communityTotal, deleteAllScans, PASSWORD, QR, uniqueEmail } from "./hel
 
 // Le vrai code de l'application, dans un navigateur au format téléphone, contre la vraie API.
 // La lecture par la caméra est remplacée par un accès direct à l'écran de résultat.
+const NEW_PASSWORD = "nouveau-motdepasse-e2e";
+
 test.describe.serial("Parcours complet dans l'application", () => {
   const email = uniqueEmail("mobile");
   const problems: string[] = [];
   let page: Page;
   let initialTotal: number;
+  let recoveryCode: string;
 
   const scan = (content: string) => page.goto(`/result?data=${encodeURIComponent(content)}`);
 
@@ -33,6 +36,7 @@ test.describe.serial("Parcours complet dans l'application", () => {
     const context = await browser.newContext({
       baseURL: "http://localhost:8082",
       viewport: { width: 390, height: 800 },
+      locale: "fr-FR",
       geolocation: { latitude: 45.76412, longitude: 4.83568 },
       permissions: ["geolocation", "camera"],
     });
@@ -65,6 +69,9 @@ test.describe.serial("Parcours complet dans l'application", () => {
   test("inscription réussie : les cinq onglets apparaissent", async () => {
     await page.getByPlaceholder("Mot de passe").fill(PASSWORD);
     await page.getByText("Créer mon compte", { exact: true }).click();
+    await expect(page.getByText("Votre code de secours")).toBeVisible();
+    recoveryCode = await page.getByText(/^[A-Z0-9]{4}(-[A-Z0-9]{4}){3}$/).innerText();
+    await page.getByText("J'ai noté ce code").click();
     for (const name of ["Scanner", "Historique", "Carte", "Stats", "Compte"]) {
       await expect(tab(name).first()).toBeVisible();
     }
@@ -241,6 +248,62 @@ test.describe.serial("Parcours complet dans l'application", () => {
     await expect(page.getByText("Bonjour QRShield")).toBeVisible();
     await expect(page.getByText("0/100", { exact: true })).toHaveCount(0);
     await expect.poll(communityTotal).toBe(before - 1);
+  });
+
+  test("mot de passe oublié : le code de secours change le mot de passe", async () => {
+    await tab("Compte").first().click();
+    await page.getByText("Se déconnecter", { exact: true }).click();
+    await page.getByText("Mot de passe oublié ?").click();
+
+    await page.getByPlaceholder("Adresse e-mail").last().fill(email);
+    await page.getByPlaceholder("Code de secours").fill("AAAA-BBBB-CCCC-DDDD");
+    await page.getByPlaceholder("Nouveau mot de passe").fill(NEW_PASSWORD);
+    await page.getByText("Changer le mot de passe", { exact: true }).click();
+    await expect(page.getByText("E-mail ou code de secours incorrect")).toBeVisible();
+
+    await page.getByPlaceholder("Code de secours").fill(recoveryCode);
+    await page.getByText("Changer le mot de passe", { exact: true }).click();
+    await expect(page.getByText("Votre code de secours")).toBeVisible();
+    await page.getByText("J'ai noté ce code").click();
+
+    await page.getByPlaceholder("Adresse e-mail").last().fill(email);
+    await page.getByPlaceholder("Mot de passe", { exact: true }).last().fill(NEW_PASSWORD);
+    await page.locator("text=Se connecter").last().click();
+    await expect(tab("Historique").first()).toBeVisible();
+  });
+
+  test("langue : l'appli passe en anglais, raisons comprises, et garde ce choix", async () => {
+    await tab("Compte").first().click();
+    await page.getByText("English", { exact: true }).click();
+    await expect(page.getByText("Sign out", { exact: true })).toBeVisible();
+    // Lien neuf : une analyse déjà en cache peut dater d'avant la traduction
+    await scan(`${QR.suspicious}?essai=${Date.now()}`);
+    await expect(page.getByText("Suspicious link")).toBeVisible();
+    await expect(page.getByText("imitates paypal.com", { exact: false })).toBeVisible();
+    await page.reload();
+    await expect(page.getByText("Suspicious link")).toBeVisible();
+
+    await page.goto("/account");
+    await page.getByText("Français", { exact: true }).click();
+    await expect(page.getByText("Se déconnecter", { exact: true })).toBeVisible();
+  });
+
+  test("suppression du compte : mot de passe exigé, puis plus rien ne reste", async () => {
+    await page.goto("/account");
+    await page.getByText("Supprimer mon compte", { exact: true }).click();
+    await page.getByPlaceholder("Mot de passe").fill("mauvais-mot-de-passe");
+    await page.getByText("Supprimer", { exact: true }).click();
+    await expect(page.getByText("Mot de passe incorrect")).toBeVisible();
+
+    await page.getByPlaceholder("Mot de passe").fill(NEW_PASSWORD);
+    await page.getByText("Supprimer", { exact: true }).click();
+    await expect(page.getByText("Connexion", { exact: true })).toBeVisible();
+
+    await page.getByPlaceholder("Adresse e-mail").fill(email);
+    await page.getByPlaceholder("Mot de passe").fill(NEW_PASSWORD);
+    await page.locator("text=Se connecter").last().click();
+    await expect(page.getByText("Email ou mot de passe incorrect")).toBeVisible();
+    expect(await communityTotal()).toBe(initialTotal);
   });
 
   test("aucune erreur pendant tout le parcours", () => {

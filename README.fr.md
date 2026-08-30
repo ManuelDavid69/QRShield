@@ -17,7 +17,7 @@ QRShield scanne le QR code, suit le lien jusqu'à sa destination réelle et indi
 - **Analyse de sécurité** : URL finale après les redirections, réputation du domaine (Google Safe Browsing, VirusTotal), détection du typosquatting (`paypa1.com`, `amaz0n-secure.fr`...), repérage des liens qui téléchargent directement un `.apk` ou un `.exe`, et score final sûr / suspect / dangereux.
 - **Historique et statistiques** : chaque scan est enregistré, et un écran de l'application présente les habitudes de l'utilisateur (scans par semaine, part de QR codes suspects, types de liens, lieux de scan).
 - **Volet communautaire** : les QR codes jugés dangereux sont remontés de façon anonymisée et affichés sur une carte, sur le principe de Waze. Ces signalements servent aussi à affiner le score. La carte est disponible dans l'application et sur une page web publique, accompagnée de statistiques globales.
-- **Alertes** : notification si un QR code déjà scanné est reclassé comme dangereux, ou si de nombreux signalements apparaissent à proximité.
+- **Alertes** : notification à l'ouverture de l'application si un QR code déjà scanné est reclassé comme dangereux, ou si de nombreux signalements apparaissent à proximité.
 
 ## Choix techniques
 
@@ -110,7 +110,7 @@ npm run typecheck   # vérification TypeScript
 
 ### Tests de bout en bout
 
-Le dossier `e2e/` contient 29 tests Playwright qui s'exécutent sur la vraie pile : API, base PostGIS et services de réputation. Ils couvrent l'API, la page web et le parcours complet de l'application, de l'inscription à la suppression d'un scan. Ils vérifient par exemple que le mot de passe Wi-Fi ne figure jamais dans la requête envoyée au serveur, ou qu'un signalement annulé ne change rien aux chiffres publics.
+Le dossier `e2e/` contient 32 tests Playwright qui s'exécutent sur la vraie pile : API, base PostGIS et services de réputation. Ils couvrent l'API, la page web et le parcours complet de l'application, de l'inscription à la suppression d'un scan. Ils vérifient par exemple que le mot de passe Wi-Fi ne figure jamais dans la requête envoyée au serveur, ou qu'un signalement annulé ne change rien aux chiffres publics.
 
 ```bash
 docker compose up -d
@@ -134,6 +134,9 @@ La documentation complète est disponible sur `/docs`. Routes actuelles :
 | POST | `/auth/refresh` | Renouveler la session |
 | POST | `/auth/logout` | Révoquer la session |
 | GET | `/auth/me` | Informations du compte connecté |
+| POST | `/auth/reset-password` | Changer un mot de passe oublié avec le code de secours |
+| POST | `/auth/recovery-code` | Générer un nouveau code de secours |
+| POST | `/auth/delete-account` | Supprimer le compte et ses données |
 | POST | `/scans` | Enregistrer un QR code scanné, avec une position GPS facultative |
 | GET | `/scans` | Historique paginé, avec un filtre facultatif sur le verdict |
 | GET / DELETE | `/scans/{id}` | Consulter ou supprimer un scan |
@@ -282,6 +285,12 @@ Les tests sur téléphone ont révélé un second problème : sur Android, `expo
 
 La limitation de débit est conservée en mémoire, ce qui suffit pour un seul processus ; avec plusieurs instances de l'API, il faudrait un compteur partagé comme Redis. En développement, l'application communique avec l'API en HTTP sur le réseau local ; un déploiement réel devra passer en HTTPS.
 
+### Compte et récupération
+
+L'application n'envoie pas d'e-mails : il aurait fallu un service tiers et un nom de domaine pour une seule fonction. À la création du compte, elle affiche donc un code de secours une seule fois, stocké haché avec Argon2id comme un mot de passe. Il permet de choisir un nouveau mot de passe, ce qui coupe aussi toutes les sessions ouvertes. Il est à usage unique et un nouveau code le remplace aussitôt. La réponse du serveur reste identique si le compte n'existe pas, et les essais sont limités en débit. La contrepartie est assumée : sans ce code, un mot de passe perdu ne peut pas être récupéré.
+
+La suppression du compte demande le mot de passe, afin qu'une session volée ne suffise pas. Elle efface les scans, les alertes, les sessions et les signalements de la personne, ainsi que les analyses d'URL que personne d'autre n'a scannées, car une URL peut contenir des données personnelles.
+
 ## Organisation du code
 
 ```
@@ -325,4 +334,6 @@ web/
 - [ ] Notifications à distance (version compilée et Firebase)
 - [x] Sessions longues avec refresh tokens
 - [x] Page de démonstration statique sur GitHub Pages
-- [ ] Déploiement de l'API
+- [x] Déploiement de l'API (Render et Neon) et APK Android
+- [x] Application en français et en anglais
+- [x] Suppression de compte et code de secours

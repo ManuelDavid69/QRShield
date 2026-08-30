@@ -17,7 +17,7 @@ QRShield scans the QR code, follows the link to its real destination, and indica
 - **Security analysis**: final URL after redirects, domain reputation (Google Safe Browsing, VirusTotal), typosquatting detection (`paypa1.com`, `amaz0n-secure.fr`...), flagging links that directly download an `.apk` or `.exe`, and a final safe / suspicious / dangerous score.
 - **History and statistics**: each scan is saved, and an app screen shows the user's habits (scans per week, share of suspicious QR codes, link types, scan locations).
 - **Community features**: QR codes judged dangerous are reported anonymously and shown on a map, a bit like Waze. These reports also help refine the score. The map is available in the app and on a public web page, along with global statistics.
-- **Alerts**: notification if a QR code already scanned is reclassified as dangerous, or if many reports appear nearby.
+- **Alerts**: notification when the app is opened if a QR code already scanned is reclassified as dangerous, or if many reports appear nearby.
 
 ## Technical choices
 
@@ -110,7 +110,7 @@ On every push to GitHub, continuous integration runs the backend tests against a
 
 ### End-to-end tests
 
-The `e2e/` folder contains 29 Playwright tests that run against the real stack: API, PostGIS database, and reputation services. They cover the API, the web page, and the full app flow, from sign-up to deleting a scan. They verify, for example, that the Wi-Fi password never appears in the request sent to the server, or that a canceled report does not change the public figures.
+The `e2e/` folder contains 32 Playwright tests that run against the real stack: API, PostGIS database, and reputation services. They cover the API, the web page, and the full app flow, from sign-up to deleting a scan. They verify, for example, that the Wi-Fi password never appears in the request sent to the server, or that a canceled report does not change the public figures.
 
 ```bash
 docker compose up -d
@@ -134,6 +134,9 @@ Full documentation is available at `/docs`. Current routes:
 | POST | `/auth/refresh` | Renew the session |
 | POST | `/auth/logout` | Revoke the session |
 | GET | `/auth/me` | Information about the logged-in account |
+| POST | `/auth/reset-password` | Change a forgotten password with the recovery code |
+| POST | `/auth/recovery-code` | Generate a new recovery code |
+| POST | `/auth/delete-account` | Delete the account and its data |
 | POST | `/scans` | Save a scanned QR code, with an optional GPS position |
 | GET | `/scans` | Paginated history, with an optional filter on the verdict |
 | GET / DELETE | `/scans/{id}` | View or delete a scan |
@@ -284,6 +287,12 @@ Tests on a phone revealed a second problem: on Android, `expo-camera` ignores th
 
 Rate limiting is kept in memory, which is enough for a single process; with multiple API instances, a shared counter such as Redis would be needed. In development, the app communicates with the API over HTTP on the local network; a real deployment will need to use HTTPS.
 
+### Account and recovery
+
+The app does not send emails: that would have required a third-party service and a domain name for a single feature. When an account is created, it therefore shows a recovery code once, stored hashed with Argon2id like a password. The code lets you choose a new password, which also closes every open session. It can only be used once and a new code replaces it immediately. The server gives the same answer if the account does not exist, and attempts are rate limited. The trade-off is accepted: without this code, a lost password cannot be recovered.
+
+Deleting an account requires the password, so that a stolen session is not enough. It erases the person's scans, alerts, sessions and reports, along with URL analyses nobody else scanned, since a URL can contain personal data.
+
 ## Code organization
 
 ```
@@ -327,4 +336,7 @@ web/
 - [ ] Remote notifications (compiled version and Firebase)
 - [x] Long sessions with refresh tokens
 - [x] Static demo page on GitHub Pages
+- [x] API deployment (Render and Neon) and Android APK
+- [x] App available in French and English
+- [x] Account deletion and recovery code
 - [ ] API deployment

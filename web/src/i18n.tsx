@@ -57,7 +57,7 @@ const en = {
   techTitle: "How it is built",
   tech: [
     "The backend is written in Python with FastAPI, and the data is stored in PostgreSQL with PostGIS for the map. I chose React Native with Expo for the app because I develop on Windows and can still build for Android and iOS.",
-    "The project has 277 backend tests, 56 mobile tests and 29 end-to-end tests. Some bugs still only showed up on a real phone, and the README describes them.",
+    "The project has 291 backend tests, 65 mobile tests and 32 end-to-end tests. Some bugs still only showed up on a real phone, and the README describes them.",
   ],
   techLink: "Read the full README",
   footer: "Manuel David, CPE Lyon",
@@ -128,7 +128,7 @@ const fr: Messages = {
   techTitle: "Comment c'est construit",
   tech: [
     "Le backend est écrit en Python avec FastAPI, et les données sont stockées dans PostgreSQL avec PostGIS pour la carte. J'ai choisi React Native avec Expo pour l'application, car je développe sous Windows et je peux tout de même compiler pour Android et iOS.",
-    "Le projet compte 277 tests backend, 56 tests mobiles et 29 tests de bout en bout. Certains bugs ne sont pourtant apparus que sur un vrai téléphone, et le README les décrit.",
+    "Le projet compte 291 tests backend, 65 tests mobiles et 32 tests de bout en bout. Certains bugs ne sont pourtant apparus que sur un vrai téléphone, et le README les décrit.",
   ],
   techLink: "Lire le README complet",
   footer: "Manuel David, CPE Lyon",

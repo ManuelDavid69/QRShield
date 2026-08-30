@@ -5,6 +5,7 @@ import type { ColorValue } from "react-native";
 
 import { colors } from "@/constants/colors";
 import { useAlerts } from "@/hooks/useAlerts";
+import { t } from "@/i18n";
 
 type IconName = ComponentProps<typeof Ionicons>["name"];
 
@@ -31,15 +32,15 @@ export default function TabsLayout() {
     >
       <Tabs.Screen
         name="index"
-        options={{ title: "Scanner", headerShown: false, tabBarIcon: tabIcon("scan-outline") }}
+        options={{ title: t.nav.scanner, headerShown: false, tabBarIcon: tabIcon("scan-outline") }}
       />
-      <Tabs.Screen name="history" options={{ title: "Historique", tabBarIcon: tabIcon("time-outline") }} />
-      <Tabs.Screen name="map" options={{ title: "Carte communautaire", tabBarLabel: "Carte", tabBarIcon: tabIcon("map-outline") }} />
-      <Tabs.Screen name="stats" options={{ title: "Statistiques", tabBarLabel: "Stats", tabBarIcon: tabIcon("stats-chart-outline") }} />
+      <Tabs.Screen name="history" options={{ title: t.nav.history, tabBarIcon: tabIcon("time-outline") }} />
+      <Tabs.Screen name="map" options={{ title: t.nav.mapTitle, tabBarLabel: t.nav.map, tabBarIcon: tabIcon("map-outline") }} />
+      <Tabs.Screen name="stats" options={{ title: t.nav.statsTitle, tabBarLabel: t.nav.stats, tabBarIcon: tabIcon("stats-chart-outline") }} />
       <Tabs.Screen
         name="account"
         options={{
-          title: "Compte",
+          title: t.nav.account,
           tabBarIcon: tabIcon("person-outline"),
           tabBarBadge: unread > 0 ? unread : undefined,
         }}

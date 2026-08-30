@@ -1,5 +1,6 @@
 import { colors } from "@/constants/colors";
 import type { Severity, Verdict } from "@/services/api";
+import { t } from "@/i18n";
 
 export const verdictColors: Record<Verdict, string> = {
   unknown: colors.unknown,
@@ -8,21 +9,13 @@ export const verdictColors: Record<Verdict, string> = {
   dangerous: colors.dangerous,
 };
 
-export const verdictLabels: Record<Verdict, string> = {
-  unknown: "Non analysé",
-  safe: "Aucun danger détecté",
-  suspicious: "Lien suspect",
-  dangerous: "Lien dangereux",
-};
+export const verdictLabels = new Proxy({} as Record<Verdict, string>, {
+  get: (_target, verdict) => t.verdicts[verdict as Verdict],
+});
 
-export const verdictAdvice: Record<Verdict, string> = {
-  unknown: "Ce contenu n'a pas pu être analysé.",
-  safe: "Aucun indice de danger n'a été trouvé, mais restez attentif à ce que le site vous demande.",
-  suspicious:
-    "Plusieurs éléments sont inhabituels. N'entrez aucune information personnelle ou bancaire sur ce site.",
-  dangerous:
-    "Ce lien présente de forts signes d'arnaque. Il est déconseillé de l'ouvrir.",
-};
+export const verdictAdvice = new Proxy({} as Record<Verdict, string>, {
+  get: (_target, verdict) => t.advice[verdict as Verdict],
+});
 
 export const severityColors: Record<Severity, string> = {
   info: colors.unknown,

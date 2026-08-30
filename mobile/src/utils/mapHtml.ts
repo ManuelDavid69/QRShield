@@ -1,5 +1,6 @@
 import { colors } from "@/constants/colors";
 import type { Zone } from "@/services/api";
+import { t } from "@/i18n";
 
 const LEAFLET = "https://unpkg.com/leaflet@1.9.4/dist";
 // Empreintes officielles de Leaflet : un fichier modifié sur le CDN ne serait pas exécuté
@@ -21,7 +22,7 @@ export function buildMapHtml(zones: Zone[]): string {
     lon: Number(zone.longitude),
     radius: zoneRadius(Number(zone.reports)),
     color: zoneColor(zone),
-    label: `${Number(zone.reports)} signalements, dont ${Number(zone.dangerous)} dangereux`,
+    label: t.map.zoneLabel(Number(zone.reports), Number(zone.dangerous)),
   }));
 
   return `<!doctype html>

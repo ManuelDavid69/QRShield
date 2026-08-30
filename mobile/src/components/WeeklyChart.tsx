@@ -2,6 +2,7 @@ import { StyleSheet, Text, View } from "react-native";
 
 import { colors } from "@/constants/colors";
 import { formatWeek } from "@/utils/labels";
+import { t } from "@/i18n";
 
 interface WeeklyChartProps {
   weeks: { week_start: string; count: number }[];
@@ -14,7 +15,7 @@ export default function WeeklyChart({ weeks }: WeeklyChartProps) {
 
   return (
     <View style={styles.card}>
-      <Text style={styles.cardLabel}>Scans par semaine</Text>
+      <Text style={styles.cardLabel}>{t.stats.perWeek}</Text>
       <View style={styles.chart}>
         {weeks.map((week) => {
           const ratio = max === 0 ? 0 : week.count / max;

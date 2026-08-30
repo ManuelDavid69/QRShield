@@ -14,6 +14,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { colors } from "@/constants/colors";
 import { ApiError } from "@/services/api";
+import { t } from "@/i18n";
 
 interface AuthFormProps {
   title: string;
@@ -24,6 +25,8 @@ interface AuthFormProps {
   footerLabel: string;
   footerAction: string;
   onFooterPress: () => void;
+  secondaryAction?: string;
+  onSecondaryPress?: () => void;
 }
 
 export default function AuthForm({
@@ -35,6 +38,8 @@ export default function AuthForm({
   footerLabel,
   footerAction,
   onFooterPress,
+  secondaryAction,
+  onSecondaryPress,
 }: AuthFormProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -49,7 +54,7 @@ export default function AuthForm({
     try {
       await onSubmit(email.trim(), password);
     } catch (caught) {
-      setError(caught instanceof ApiError ? caught.message : "Une erreur est survenue.");
+      setError(caught instanceof ApiError ? caught.message : t.common.error);
     } finally {
       setSubmitting(false);
     }
@@ -73,7 +78,7 @@ export default function AuthForm({
             style={styles.input}
             value={email}
             onChangeText={setEmail}
-            placeholder="Adresse e-mail"
+            placeholder={t.auth.email}
             placeholderTextColor={colors.textMuted}
             autoCapitalize="none"
             autoCorrect={false}
@@ -87,7 +92,7 @@ export default function AuthForm({
               style={styles.input}
               value={password}
               onChangeText={setPassword}
-              placeholder="Mot de passe"
+              placeholder={t.auth.password}
               placeholderTextColor={colors.textMuted}
               secureTextEntry
               autoCapitalize="none"
@@ -113,6 +118,12 @@ export default function AuthForm({
               <Text style={styles.buttonText}>{submitLabel}</Text>
             )}
           </TouchableOpacity>
+
+          {secondaryAction ? (
+            <Text style={styles.secondary} onPress={onSecondaryPress} accessibilityRole="button">
+              {secondaryAction}
+            </Text>
+          ) : null}
 
           <View style={styles.footer}>
             <Text style={styles.footerLabel}>{footerLabel} </Text>
@@ -199,6 +210,12 @@ const styles = StyleSheet.create({
   footerLabel: {
     color: colors.textMuted,
     fontSize: 14,
+  },
+  secondary: {
+    textAlign: "center",
+    color: colors.primary,
+    fontSize: 14,
+    fontWeight: "600",
   },
   footerAction: {
     color: colors.primary,

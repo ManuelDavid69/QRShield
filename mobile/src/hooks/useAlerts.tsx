@@ -22,6 +22,7 @@ import {
 } from "@/services/notifications";
 import { loadValue, saveValue } from "@/services/tokenStorage";
 import { reportsNearby, shouldAlert } from "@/utils/zoneAlert";
+import { t } from "@/i18n";
 
 const LAST_SEEN_KEY = "qrshield.last_notification_at";
 const LAST_ZONE_ALERT_KEY = "qrshield.last_zone_alert_at";
@@ -49,8 +50,8 @@ async function checkZone(): Promise<void> {
 
   await saveValue(LAST_ZONE_ALERT_KEY, String(now));
   await showNotification(
-    "QR codes piégés près de vous",
-    `${reports} signalements cette semaine dans votre secteur. Vérifiez les QR codes avant de les scanner.`,
+    t.alerts.zoneTitle,
+    t.alerts.zoneBody(reports),
   );
 }
 

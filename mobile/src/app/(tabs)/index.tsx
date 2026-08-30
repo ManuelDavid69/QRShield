@@ -9,6 +9,7 @@ import PermissionRequest from "@/components/PermissionRequest";
 import ScanFrame from "@/components/ScanFrame";
 import { colors } from "@/constants/colors";
 import { getQrPayload } from "@/utils/scanResult";
+import { t } from "@/i18n";
 
 export default function ScanScreen() {
   const [permission, requestPermission] = useCameraPermissions();
@@ -63,7 +64,7 @@ export default function ScanScreen() {
           style={[styles.torchButton, torch ? styles.torchButtonOn : null]}
           onPress={() => setTorch((previous) => !previous)}
         >
-          <Text style={[styles.torchLabel, torch ? styles.torchLabelOn : null]}>Lampe</Text>
+          <Text style={[styles.torchLabel, torch ? styles.torchLabelOn : null]}>{t.scanner.torch}</Text>
         </Pressable>
       </SafeAreaView>
     </View>

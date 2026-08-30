@@ -15,14 +15,15 @@ import { colors } from "@/constants/colors";
 import { useAuth } from "@/hooks/useAuth";
 import { ApiError, listScans, type Scan, type Verdict } from "@/services/api";
 import { mergeScans } from "@/utils/labels";
+import { t } from "@/i18n";
 
 const PAGE_SIZE = 20;
 
 const FILTERS: { label: string; value: Verdict | undefined }[] = [
-  { label: "Tous", value: undefined },
-  { label: "Dangereux", value: "dangerous" },
-  { label: "Suspects", value: "suspicious" },
-  { label: "Sûrs", value: "safe" },
+  { get label() { return t.history.all; }, value: undefined },
+  { get label() { return t.history.dangerous; }, value: "dangerous" },
+  { get label() { return t.history.suspicious; }, value: "suspicious" },
+  { get label() { return t.history.safe; }, value: "safe" },
 ];
 
 export default function HistoryScreen() {
@@ -64,7 +65,7 @@ export default function HistoryScreen() {
           return;
         }
         if (requestId !== lastRequest.current) return;
-        setError(cause instanceof Error ? cause.message : "Une erreur est survenue.");
+        setError(cause instanceof Error ? cause.message : t.common.error);
       } finally {
         if (requestId === lastRequest.current) {
           loadingRef.current = false;
@@ -132,7 +133,7 @@ export default function HistoryScreen() {
           loading ? (
             <ActivityIndicator style={styles.empty} color={colors.primary} />
           ) : (
-            <Text style={styles.emptyText}>{error ?? "Aucun scan pour le moment."}</Text>
+            <Text style={styles.emptyText}>{error ?? t.history.empty}</Text>
           )
         }
       />

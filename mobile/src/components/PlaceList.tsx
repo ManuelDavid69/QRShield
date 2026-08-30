@@ -3,6 +3,7 @@ import * as Location from "expo-location";
 
 import BarList from "@/components/BarList";
 import type { UserStats } from "@/services/api";
+import { t } from "@/i18n";
 
 interface PlaceListProps {
   places: UserStats["places"];
@@ -42,9 +43,9 @@ export default function PlaceList({ places }: PlaceListProps) {
 
   const rows = places.map((place, index) => ({
     key: String(index),
-    label: names[index] ?? `Lieu ${index + 1}`,
+    label: names[index] ?? t.stats.place(index + 1),
     count: place.count,
   }));
 
-  return <BarList title="Lieux où vous scannez le plus" rows={rows} />;
+  return <BarList title={t.stats.places} rows={rows} />;
 }

@@ -8,7 +8,8 @@ import { colors } from "@/constants/colors";
 import type { Analysis, Verdict } from "@/services/api";
 import { confirmDialog, notify } from "@/utils/dialog";
 import { isOpenableUrl, typeLabels, type ParsedQr } from "@/utils/qrContent";
-import { hostOf, verdictAdvice } from "@/utils/verdict";
+import { hostOf, verdictAdvice, verdictLabels } from "@/utils/verdict";
+import { t } from "@/i18n";
 
 // Longueur fixe : afficher une étoile par caractère révélerait la taille du mot de passe
 const MASKED_PASSWORD = "********";
@@ -31,17 +32,17 @@ function InfoRow({ label, value }: InfoRowProps) {
 
 function confirmOpen(url: string, host: string, verdict: Verdict) {
   const risky = verdict === "dangerous" || verdict === "suspicious";
-  const title = verdict === "dangerous" ? "Lien dangereux" : verdict === "suspicious" ? "Lien suspect" : "Ouvrir ce lien ?";
+  const title = risky ? verdictLabels[verdict] : t.report.openQuestion;
   const message = risky ? `${host}\n\n${verdictAdvice[verdict]}` : host;
 
   confirmDialog({
     title,
     message,
-    confirmLabel: risky ? "Ouvrir quand même" : "Ouvrir",
+    confirmLabel: risky ? t.report.openAnyway : t.report.open,
     destructive: risky,
     onConfirm: () => {
       void Linking.openURL(url).catch(() => {
-        notify("Impossible d'ouvrir ce lien", "Aucune application ne peut gérer cette adresse.");
+        notify(t.report.cannotOpen, t.report.noApp);
       });
     },
   });
@@ -75,7 +76,7 @@ export default function ScanReport({ parsed, analysis, analyzing, header, footer
       {isUrl && analysis !== null ? <VerdictCard verdict={verdict} score={analysis.score} /> : null}
 
       <View style={reportStyles.card}>
-        <Text style={reportStyles.cardLabel}>Type</Text>
+        <Text style={reportStyles.cardLabel}>{t.report.type}</Text>
         <View style={styles.badge}>
           <Text style={styles.badgeText}>{typeLabels[parsed.type]}</Text>
         </View>
@@ -83,7 +84,7 @@ export default function ScanReport({ parsed, analysis, analyzing, header, footer
 
       {isUrl ? (
         <View style={styles.highlightCard}>
-          <Text style={reportStyles.cardLabel}>Ce lien mène vers</Text>
+          <Text style={reportStyles.cardLabel}>{t.report.leadsTo}</Text>
           <Text style={styles.hostText} selectable>
             {host}
           </Text>
@@ -98,19 +99,19 @@ export default function ScanReport({ parsed, analysis, analyzing, header, footer
 
       {parsed.type === "wifi" && parsed.wifi !== undefined ? (
         <View style={reportStyles.card}>
-          <Text style={reportStyles.cardLabel}>Réseau Wi-Fi</Text>
-          <InfoRow label="Nom du réseau" value={parsed.wifi.ssid.length > 0 ? parsed.wifi.ssid : "Inconnu"} />
-          <InfoRow label="Sécurité" value={parsed.wifi.security} />
-          <InfoRow label="Réseau masqué" value={parsed.wifi.hidden ? "Oui" : "Non"} />
-          <InfoRow label="Mot de passe" value={parsed.wifi.hasPassword ? MASKED_PASSWORD : "Aucun"} />
+          <Text style={reportStyles.cardLabel}>{t.report.wifiNetwork}</Text>
+          <InfoRow label={t.report.networkName} value={parsed.wifi.ssid.length > 0 ? parsed.wifi.ssid : t.report.unknownNetwork} />
+          <InfoRow label={t.report.security} value={parsed.wifi.security} />
+          <InfoRow label={t.report.hiddenNetwork} value={parsed.wifi.hidden ? t.common.yes : t.common.no} />
+          <InfoRow label={t.report.password} value={parsed.wifi.hasPassword ? MASKED_PASSWORD : t.report.noPassword} />
         </View>
       ) : null}
 
       {parsed.type !== "url" && parsed.type !== "wifi" ? (
         <View style={reportStyles.card}>
-          <Text style={reportStyles.cardLabel}>Contenu</Text>
+          <Text style={reportStyles.cardLabel}>{t.report.content}</Text>
           <Text style={styles.rawText} selectable>
-            {parsed.raw.length > 0 ? parsed.raw : "Aucun contenu détecté."}
+            {parsed.raw.length > 0 ? parsed.raw : t.report.noContent}
           </Text>
         </View>
       ) : null}
@@ -124,7 +125,7 @@ export default function ScanReport({ parsed, analysis, analyzing, header, footer
             onPress={() => confirmOpen(targetUrl, host, verdict)}
           >
             <Text style={risky ? styles.riskyButtonText : styles.primaryButtonText}>
-              {risky ? "Ouvrir quand même" : "Ouvrir le lien"}
+              {risky ? t.report.openAnyway : t.report.openLink}
             </Text>
           </TouchableOpacity>
         ) : null}

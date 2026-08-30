@@ -1,3 +1,4 @@
+import { t } from "@/i18n";
 export type QrContentType = "url" | "wifi" | "email" | "phone" | "sms" | "geo" | "contact" | "text";
 
 export interface WifiInfo {
@@ -17,8 +18,6 @@ export interface ParsedQr {
 
 // Doit rester aligné avec la regex du backend : un vrai nom d'hôte uniquement.
 const BARE_URL_RE = /^(?:[a-z0-9-]+\.)+[a-z]{2,}(?::\d{1,5})?(?:[/?#]\S*)?$/i;
-
-const WIFI_NO_PASSWORD = "Aucune";
 
 function splitFields(payload: string): string[] {
   const fields: string[] = [];
@@ -92,7 +91,7 @@ function parseWifi(raw: string): WifiInfo {
   }
 
   const normalizedSecurity =
-    security.length === 0 || security.toLowerCase() === "nopass" ? WIFI_NO_PASSWORD : security;
+    security.length === 0 || security.toLowerCase() === "nopass" ? t.report.noSecurity : security;
 
   return { ssid, security: normalizedSecurity, hidden, hasPassword };
 }
@@ -156,16 +155,9 @@ export function sanitizeForUpload(parsed: ParsedQr): string {
   return parsed.type === "wifi" ? parsed.raw.replace(WIFI_PASSWORD_RE, "$1***") : parsed.raw;
 }
 
-export const typeLabels: Record<QrContentType, string> = {
-  url: "Lien web",
-  wifi: "Réseau Wi-Fi",
-  email: "E-mail",
-  phone: "Numéro de téléphone",
-  sms: "SMS",
-  geo: "Position GPS",
-  contact: "Carte de contact",
-  text: "Texte",
-};
+export const typeLabels = new Proxy({} as Record<QrContentType, string>, {
+  get: (_target, type) => t.types[type as QrContentType],
+});
 
 export function isOpenableUrl(url: string): boolean {
   try {

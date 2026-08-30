@@ -4,6 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { ApiError, createScan, type Scan } from "@/services/api";
 import { getScanPosition } from "@/services/location";
 import { sanitizeForUpload, type ParsedQr } from "@/utils/qrContent";
+import { t } from "@/i18n";
 
 type AnalysisState =
   | { status: "loading" }
@@ -28,7 +29,7 @@ export function useScanAnalysis(parsed: ParsedQr): { state: AnalysisState; retry
         await signOut();
         return;
       }
-      const message = error instanceof ApiError ? error.message : "L'analyse a échoué.";
+      const message = error instanceof ApiError ? error.message : t.result.failed;
       setState({ status: "error", message });
     }
   }, [parsed, token, signOut]);

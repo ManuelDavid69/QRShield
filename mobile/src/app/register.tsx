@@ -2,19 +2,20 @@ import { router } from "expo-router";
 
 import AuthForm from "@/components/AuthForm";
 import { useAuth } from "@/hooks/useAuth";
+import { t } from "@/i18n";
 
 export default function RegisterScreen() {
   const { signUp } = useAuth();
 
   return (
     <AuthForm
-      title="Créer un compte"
-      subtitle="Votre historique de scans reste lié à votre compte."
-      submitLabel="Créer mon compte"
-      passwordHint="10 caractères minimum."
+      title={t.auth.createAccount}
+      subtitle={t.auth.registerSubtitle}
+      submitLabel={t.auth.registerAction}
+      passwordHint={t.auth.passwordHint}
       onSubmit={signUp}
-      footerLabel="Déjà un compte ?"
-      footerAction="Se connecter"
+      footerLabel={t.auth.hasAccount}
+      footerAction={t.auth.loginAction}
       onFooterPress={() => router.replace("/login")}
     />
   );

@@ -6,6 +6,7 @@ import MapFrame from "@/components/MapFrame";
 import { colors } from "@/constants/colors";
 import { ApiError, getZones, type Zone } from "@/services/api";
 import { buildMapHtml } from "@/utils/mapHtml";
+import { t } from "@/i18n";
 
 export default function MapScreen() {
   const [zones, setZones] = useState<Zone[] | null>(null);
@@ -19,7 +20,7 @@ export default function MapScreen() {
           setError(null);
         })
         .catch((cause: unknown) => {
-          setError(cause instanceof ApiError ? cause.message : "Une erreur est survenue.");
+          setError(cause instanceof ApiError ? cause.message : t.common.error);
         });
     }, []),
   );
@@ -40,14 +41,14 @@ export default function MapScreen() {
       <View style={styles.legend}>
         <View style={styles.legendRow}>
           <View style={[styles.dot, { backgroundColor: colors.dangerous }]} />
-          <Text style={styles.legendText}>Majorité de liens dangereux</Text>
+          <Text style={styles.legendText}>{t.map.mostlyDangerous}</Text>
         </View>
         <View style={styles.legendRow}>
           <View style={[styles.dot, { backgroundColor: colors.suspicious }]} />
-          <Text style={styles.legendText}>Majorité de liens suspects</Text>
+          <Text style={styles.legendText}>{t.map.mostlySuspicious}</Text>
         </View>
         <Text style={styles.note}>
-          Signalements anonymes des 90 derniers jours. Une zone apparaît à partir de deux personnes différentes.
+          {t.map.note}
         </Text>
       </View>
     </View>

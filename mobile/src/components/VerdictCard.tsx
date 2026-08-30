@@ -3,6 +3,7 @@ import { StyleSheet, Text, View } from "react-native";
 import { colors } from "@/constants/colors";
 import type { Verdict } from "@/services/api";
 import { verdictAdvice, verdictColors, verdictLabels } from "@/utils/verdict";
+import { t } from "@/i18n";
 
 interface VerdictCardProps {
   verdict: Verdict;
@@ -20,7 +21,7 @@ export default function VerdictCard({ verdict, score }: VerdictCardProps) {
       accessibilityLabel={
         score === null
           ? verdictLabels[verdict]
-          : `${verdictLabels[verdict]}, score ${score} sur 100`
+          : t.report.score(verdictLabels[verdict], score)
       }
     >
       <View style={styles.header}>

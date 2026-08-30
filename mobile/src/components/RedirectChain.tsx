@@ -2,6 +2,7 @@ import { Fragment } from "react";
 import { StyleSheet, Text, View } from "react-native";
 
 import { colors } from "@/constants/colors";
+import { t } from "@/i18n";
 
 interface RedirectChainProps {
   chain: string[];
@@ -12,7 +13,7 @@ export default function RedirectChain({ chain }: RedirectChainProps) {
 
   return (
     <View style={styles.card}>
-      <Text style={styles.cardLabel}>Redirections ({chain.length - 1})</Text>
+      <Text style={styles.cardLabel}>{t.report.redirects(chain.length - 1)}</Text>
       {chain.map((url, index) => {
         const isLast = index === chain.length - 1;
         return (

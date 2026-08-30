@@ -1,5 +1,7 @@
 import Constants from "expo-constants";
 
+import { t } from "@/i18n";
+import { serverErrorText } from "@/i18n/reasons";
 import { loadRefreshToken, saveTokens } from "@/services/tokenStorage";
 
 export type Verdict = "unknown" | "safe" | "suspicious" | "dangerous";
@@ -10,6 +12,7 @@ export interface Reason {
   code: string;
   severity: Severity;
   message: string;
+  params?: Record<string, string>;
 }
 
 export interface Analysis {
@@ -76,6 +79,7 @@ export interface Account {
   id: string;
   email: string;
   created_at: string;
+  has_recovery_code: boolean;
 }
 
 export class ApiError extends Error {
@@ -105,11 +109,11 @@ export function errorMessage(status: number, body: unknown): string {
     // FastAPI indique le champ refusé : le mot de passe est validé avant de chercher le compte
     const first = Array.isArray(detail) ? (detail[0] as { loc?: unknown[] } | undefined) : undefined;
     const field = first?.loc?.at(-1);
-    if (field === "password") return "Le mot de passe doit contenir au moins 10 caractères.";
-    if (field === "email") return "Cette adresse e-mail n'est pas valide.";
-    return "Vérifiez les informations saisies.";
+    if (field === "password" || field === "new_password") return t.api.passwordLength;
+    if (field === "email") return t.api.invalidEmail;
+    return t.api.invalidInput;
   }
-  return typeof detail === "string" ? detail : "Le serveur a renvoyé une erreur.";
+  return typeof detail === "string" ? serverErrorText(detail) : t.api.serverError;
 }
 
 interface TokenPair {
@@ -159,7 +163,7 @@ async function request<T>(path: string, init: RequestInit, canRenew = true): Pro
   try {
     response = await fetch(`${apiBaseUrl()}${path}`, { ...init, signal: controller.signal });
   } catch {
-    throw new ApiError(0, "Impossible de joindre le serveur QRShield.");
+    throw new ApiError(0, t.api.unreachable);
   } finally {
     clearTimeout(timer);
   }
@@ -195,8 +199,8 @@ export async function logout(refreshToken: string): Promise<void> {
   });
 }
 
-export async function register(email: string, password: string): Promise<void> {
-  await request("/auth/register", {
+export function register(email: string, password: string): Promise<{ recovery_code: string }> {
+  return request("/auth/register", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, password }),
@@ -230,6 +234,30 @@ export function getScan(token: string, id: string): Promise<Scan> {
 
 export async function deleteScan(token: string, id: string): Promise<void> {
   await request(`/scans/${encodeURIComponent(id)}`, { method: "DELETE", headers: authHeader(token) });
+}
+
+export function resetPassword(email: string, code: string, password: string): Promise<{ recovery_code: string }> {
+  return request("/auth/reset-password", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, recovery_code: code, new_password: password }),
+  });
+}
+
+export function createRecoveryCode(token: string, password: string): Promise<{ recovery_code: string }> {
+  return request("/auth/recovery-code", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...authHeader(token) },
+    body: JSON.stringify({ password }),
+  });
+}
+
+export async function deleteAccount(token: string, password: string): Promise<void> {
+  await request("/auth/delete-account", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...authHeader(token) },
+    body: JSON.stringify({ password }),
+  });
 }
 
 export function getMe(token: string): Promise<Account> {

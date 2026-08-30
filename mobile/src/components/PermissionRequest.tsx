@@ -2,6 +2,7 @@ import { Linking, Pressable, StyleSheet, Text } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { colors } from "@/constants/colors";
+import { t } from "@/i18n";
 
 interface PermissionRequestProps {
   canAskAgain: boolean;
@@ -11,19 +12,19 @@ interface PermissionRequestProps {
 export default function PermissionRequest({ canAskAgain, onRequest }: PermissionRequestProps) {
   return (
     <SafeAreaView style={styles.container}>
-      <Text style={styles.title}>Accès à la caméra</Text>
+      <Text style={styles.title}>{t.scanner.permissionTitle}</Text>
       <Text style={styles.description}>
-        QRShield a besoin de la caméra pour lire les QR codes. Aucune image n&apos;est enregistrée.
+        {t.scanner.permissionText}
       </Text>
 
       {canAskAgain ? (
         <Pressable style={styles.button} onPress={onRequest}>
-          <Text style={styles.buttonText}>Autoriser la caméra</Text>
+          <Text style={styles.buttonText}>{t.scanner.permissionAllow}</Text>
         </Pressable>
       ) : (
         <>
           <Text style={styles.description}>
-            L&apos;accès a été refusé. Vous pouvez l&apos;activer dans les réglages du téléphone.
+            {t.scanner.permissionDenied}
           </Text>
           <Pressable
             style={styles.button}
@@ -31,7 +32,7 @@ export default function PermissionRequest({ canAskAgain, onRequest }: Permission
               void Linking.openSettings();
             }}
           >
-            <Text style={styles.buttonText}>Ouvrir les réglages</Text>
+            <Text style={styles.buttonText}>{t.scanner.openSettings}</Text>
           </Pressable>
         </>
       )}

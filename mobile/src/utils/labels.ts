@@ -1,16 +1,13 @@
 import { parseQrContent } from "@/utils/qrContent";
 import type { Scan, ScanCategory } from "@/services/api";
+import { locale, t } from "@/i18n";
 
-export const categoryLabels: Record<ScanCategory, string> = {
-  website: "Sites web",
-  menu: "Menus",
-  payment: "Paiements",
-  wifi: "Wi-Fi",
-  other: "Autres",
-};
+export const categoryLabels = new Proxy({} as Record<ScanCategory, string>, {
+  get: (_target, category) => t.categories[category as ScanCategory],
+});
 
 export function formatScanDate(iso: string): string {
-  return new Date(iso).toLocaleString("fr-FR", {
+  return new Date(iso).toLocaleString(locale(), {
     day: "2-digit",
     month: "short",
     hour: "2-digit",
@@ -19,7 +16,7 @@ export function formatScanDate(iso: string): string {
 }
 
 export function formatWeek(isoDate: string): string {
-  return new Date(`${isoDate}T12:00:00`).toLocaleDateString("fr-FR", {
+  return new Date(`${isoDate}T12:00:00`).toLocaleDateString(locale(), {
     day: "2-digit",
     month: "2-digit",
   });
@@ -34,7 +31,7 @@ export function mergeScans(current: Scan[], next: Scan[]): Scan[] {
 export function scanTitle(scan: Scan): string {
   if (scan.content_type === "wifi") {
     const ssid = parseQrContent(scan.content).wifi?.ssid;
-    return ssid ? `Wi-Fi : ${ssid}` : "Réseau Wi-Fi";
+    return ssid ? t.history.wifiTitle(ssid) : t.history.wifiNetwork;
   }
   return scan.analysis?.domain ?? scan.url ?? scan.content;
 }

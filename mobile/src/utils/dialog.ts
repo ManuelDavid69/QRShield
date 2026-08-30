@@ -1,4 +1,5 @@
 import { Alert } from "react-native";
+import { t } from "@/i18n";
 
 export interface ConfirmOptions {
   title: string;
@@ -10,7 +11,7 @@ export interface ConfirmOptions {
 
 export function confirmDialog({ title, message, confirmLabel, destructive, onConfirm }: ConfirmOptions): void {
   Alert.alert(title, message, [
-    { text: "Annuler", style: "cancel" },
+    { text: t.common.cancel, style: "cancel" },
     { text: confirmLabel, style: destructive ? "destructive" : "default", onPress: onConfirm },
   ]);
 }

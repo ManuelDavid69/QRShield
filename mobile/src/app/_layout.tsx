@@ -5,6 +5,9 @@ import { View } from "react-native";
 import { colors } from "@/constants/colors";
 import { AlertsProvider } from "@/hooks/useAlerts";
 import { AuthProvider, useAuth } from "@/hooks/useAuth";
+import { LanguageProvider } from "@/hooks/useLanguage";
+import RecoveryCodeModal from "@/components/RecoveryCodeModal";
+import { t } from "@/i18n";
 
 function Navigator() {
   const { token, ready } = useAuth();
@@ -26,12 +29,13 @@ function Navigator() {
     >
       <Stack.Protected guard={signedIn}>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="result" options={{ title: "Résultat du scan", presentation: "card" }} />
-        <Stack.Screen name="scan/[id]" options={{ title: "Détail du scan" }} />
+        <Stack.Screen name="result" options={{ title: t.nav.result, presentation: "card" }} />
+        <Stack.Screen name="scan/[id]" options={{ title: t.nav.scanDetail }} />
       </Stack.Protected>
       <Stack.Protected guard={!signedIn}>
         <Stack.Screen name="login" options={{ headerShown: false }} />
         <Stack.Screen name="register" options={{ headerShown: false }} />
+        <Stack.Screen name="reset-password" options={{ headerShown: false }} />
       </Stack.Protected>
     </Stack>
   );
@@ -39,12 +43,15 @@ function Navigator() {
 
 export default function RootLayout() {
   return (
-    <AuthProvider>
-      <AlertsProvider>
-        {/* Sans réglage, les icônes suivent le thème du téléphone : blanches sur fond clair en mode sombre */}
-        <StatusBar style="dark" />
-        <Navigator />
-      </AlertsProvider>
-    </AuthProvider>
+    <LanguageProvider>
+      <AuthProvider>
+        <AlertsProvider>
+          {/* Sans réglage, les icônes suivent le thème du téléphone : blanches sur fond clair en mode sombre */}
+          <StatusBar style="dark" />
+          <Navigator />
+          <RecoveryCodeModal />
+        </AlertsProvider>
+      </AuthProvider>
+    </LanguageProvider>
   );
 }

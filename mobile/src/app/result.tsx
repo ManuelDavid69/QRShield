@@ -9,6 +9,7 @@ import ScanReport, { reportStyles } from "@/components/ScanReport";
 import { colors } from "@/constants/colors";
 import { useScanAnalysis } from "@/hooks/useScanAnalysis";
 import { parseQrContent } from "@/utils/qrContent";
+import { t } from "@/i18n";
 
 export default function ResultScreen() {
   const { data } = useLocalSearchParams<{ data?: string }>();
@@ -35,21 +36,21 @@ function ScanResult({ data }: { data: string }) {
         <View style={styles.loadingCard}>
           <ActivityIndicator color={colors.primary} />
           <View style={styles.loadingTexts}>
-            <Text style={styles.title}>Analyse du lien en cours</Text>
-            <Text style={styles.text}>Vérification des redirections et des bases de sites dangereux.</Text>
+            <Text style={styles.title}>{t.result.analyzing}</Text>
+            <Text style={styles.text}>{t.result.analyzingText}</Text>
           </View>
         </View>
       ) : null}
 
       {state.status === "error" ? (
         <View style={styles.errorCard}>
-          <Text style={styles.title}>{isUrl ? "Analyse indisponible" : "Scan non enregistré"}</Text>
+          <Text style={styles.title}>{isUrl ? t.result.unavailable : t.result.notSaved}</Text>
           <Text style={styles.text}>
             {state.message}
-            {isUrl ? " Vérifiez que le domaine correspond bien au site attendu avant d'ouvrir le lien." : ""}
+            {isUrl ? t.result.checkDomain : ""}
           </Text>
           <TouchableOpacity activeOpacity={0.8} onPress={retry}>
-            <Text style={styles.retryText}>Réessayer</Text>
+            <Text style={styles.retryText}>{t.result.retry}</Text>
           </TouchableOpacity>
         </View>
       ) : null}
@@ -68,7 +69,7 @@ function ScanResult({ data }: { data: string }) {
           <>
             {isUrl && state.status === "done" ? <ReportButton scanId={state.scan.id} /> : null}
             <TouchableOpacity style={reportStyles.secondaryButton} activeOpacity={0.8} onPress={backToScanner}>
-              <Text style={reportStyles.secondaryButtonText}>Scanner un autre QR code</Text>
+              <Text style={reportStyles.secondaryButtonText}>{t.result.scanAnother}</Text>
             </TouchableOpacity>
           </>
         }

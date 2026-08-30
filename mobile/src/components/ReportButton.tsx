@@ -6,6 +6,7 @@ import { colors } from "@/constants/colors";
 import { useAuth } from "@/hooks/useAuth";
 import { ApiError, reportScan } from "@/services/api";
 import { confirmDialog, notify } from "@/utils/dialog";
+import { t } from "@/i18n";
 
 export default function ReportButton({ scanId }: { scanId: string }) {
   const { token, signOut } = useAuth();
@@ -23,22 +24,22 @@ export default function ReportButton({ scanId }: { scanId: string }) {
         await signOut();
         return;
       }
-      notify("Signalement impossible", error instanceof ApiError ? error.message : "Une erreur est survenue.");
+      notify(t.reporting.failed, error instanceof ApiError ? error.message : t.common.error);
     }
   }
 
   function confirm() {
     confirmDialog({
-      title: "Signaler ce lien ?",
-      message: "Le signalement est anonyme et aide les autres utilisateurs à repérer les QR codes piégés.",
-      confirmLabel: "Signaler",
+      title: t.reporting.title,
+      message: t.reporting.text,
+      confirmLabel: t.reporting.confirm,
       destructive: true,
       onConfirm: () => void send(),
     });
   }
 
   if (status === "done") {
-    return <Text style={styles.done}>Merci, votre signalement a bien été enregistré.</Text>;
+    return <Text style={styles.done}>{t.reporting.done}</Text>;
   }
 
   return (
@@ -51,7 +52,7 @@ export default function ReportButton({ scanId }: { scanId: string }) {
       {status === "sending" ? (
         <ActivityIndicator color={colors.primary} />
       ) : (
-        <Text style={reportStyles.secondaryButtonText}>Signaler ce lien</Text>
+        <Text style={reportStyles.secondaryButtonText}>{t.reporting.action}</Text>
       )}
     </TouchableOpacity>
   );

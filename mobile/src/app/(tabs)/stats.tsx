@@ -17,6 +17,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { ApiError, getStats, type UserStats } from "@/services/api";
 import { categoryLabels } from "@/utils/labels";
 import { verdictColors, verdictLabels } from "@/utils/verdict";
+import { t } from "@/i18n";
 
 export default function StatsScreen() {
   const { token, signOut } = useAuth();
@@ -36,7 +37,7 @@ export default function StatsScreen() {
         await signOut();
         return;
       }
-      setError(cause instanceof Error ? cause.message : "Une erreur est survenue.");
+      setError(cause instanceof Error ? cause.message : t.common.error);
     } finally {
       setRefreshing(false);
     }
@@ -79,31 +80,31 @@ export default function StatsScreen() {
       {error !== null ? <Text style={styles.message}>{error}</Text> : null}
 
       {stats !== null && stats.total_scans === 0 ? (
-        <Text style={styles.message}>Vos statistiques apparaîtront après votre premier scan.</Text>
+        <Text style={styles.message}>{t.stats.empty}</Text>
       ) : null}
 
       {stats !== null && stats.total_scans > 0 ? (
         <>
           <View style={styles.cards}>
             <View style={[styles.card, styles.half]}>
-              <Text style={styles.cardLabel}>Scans</Text>
+              <Text style={styles.cardLabel}>{t.stats.scans}</Text>
               <Text style={styles.big}>{stats.total_scans}</Text>
             </View>
             <View style={[styles.card, styles.half]}>
-              <Text style={styles.cardLabel}>QR codes à risque</Text>
+              <Text style={styles.cardLabel}>{t.stats.risky}</Text>
               <Text style={[styles.big, stats.flagged_percent > 0 && styles.flagged]}>
-                {`${String(stats.flagged_percent).replace(".", ",")} %`}
+                {`${String(stats.flagged_percent).replace(".", t.stats.decimalSeparator)} %`}
               </Text>
-              <Text style={styles.small}>{`${stats.flagged_scans} sur ${stats.total_scans}`}</Text>
+              <Text style={styles.small}>{t.stats.ratio(stats.flagged_scans, stats.total_scans)}</Text>
             </View>
           </View>
 
           <WeeklyChart weeks={stats.weekly} />
 
-          <BarList title="Verdicts" rows={verdictRows} />
+          <BarList title={t.stats.verdicts} rows={verdictRows} />
 
           <BarList
-            title="Types de QR codes"
+            title={t.stats.types}
             rows={stats.categories.map((entry) => ({
               key: entry.category,
               label: categoryLabels[entry.category],
@@ -112,7 +113,7 @@ export default function StatsScreen() {
           />
 
           <BarList
-            title="Sites les plus scannés"
+            title={t.stats.topSites}
             rows={stats.top_domains.map((entry) => ({
               key: entry.domain,
               label: entry.domain,

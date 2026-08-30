@@ -11,6 +11,7 @@ import { ApiError, deleteScan, getScan, type Scan } from "@/services/api";
 import { confirmDialog, notify } from "@/utils/dialog";
 import { formatScanDate } from "@/utils/labels";
 import { parseQrContent } from "@/utils/qrContent";
+import { t } from "@/i18n";
 
 export default function ScanDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -33,7 +34,7 @@ export default function ScanDetailScreen() {
           void signOut();
           return;
         }
-        setError(cause instanceof Error ? cause.message : "Une erreur est survenue.");
+        setError(cause instanceof Error ? cause.message : t.common.error);
       });
     return () => {
       cancelled = true;
@@ -44,16 +45,16 @@ export default function ScanDetailScreen() {
 
   const handleDelete = useCallback(() => {
     confirmDialog({
-      title: "Supprimer ce scan ?",
-      message: "Il disparaîtra de votre historique et de vos statistiques.",
-      confirmLabel: "Supprimer",
+      title: t.scanDetail.deleteTitle,
+      message: t.scanDetail.deleteText,
+      confirmLabel: t.common.delete,
       destructive: true,
       onConfirm: () => {
         if (token === null) return;
         void deleteScan(token, id)
           .then(() => router.back())
           .catch((cause: unknown) => {
-            notify("Suppression impossible", cause instanceof Error ? cause.message : "Une erreur est survenue.");
+            notify(t.scanDetail.deleteFailed, cause instanceof Error ? cause.message : t.common.error);
           });
       },
     });
@@ -83,7 +84,7 @@ export default function ScanDetailScreen() {
         analyzing={false}
         header={
           <View style={reportStyles.card}>
-            <Text style={reportStyles.cardLabel}>Scanné le</Text>
+            <Text style={reportStyles.cardLabel}>{t.scanDetail.scannedOn}</Text>
             <Text style={styles.date}>{formatScanDate(scan.scanned_at)}</Text>
           </View>
         }
@@ -91,7 +92,7 @@ export default function ScanDetailScreen() {
           <>
             {scan.analysis !== null ? <ReportButton scanId={scan.id} /> : null}
             <TouchableOpacity style={reportStyles.secondaryButton} activeOpacity={0.8} onPress={handleDelete}>
-              <Text style={styles.deleteText}>Supprimer ce scan</Text>
+              <Text style={styles.deleteText}>{t.scanDetail.deleteAction}</Text>
             </TouchableOpacity>
           </>
         }

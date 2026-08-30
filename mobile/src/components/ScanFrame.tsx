@@ -1,4 +1,5 @@
 import { StyleSheet, Text, View } from "react-native";
+import { t } from "@/i18n";
 
 const FRAME_SIZE = 260;
 const CORNER_SIZE = 34;
@@ -19,7 +20,7 @@ export default function ScanFrame() {
         <View style={styles.mask} />
       </View>
       <View style={[styles.mask, styles.bottomMask]}>
-        <Text style={styles.hint}>Placez le QR code dans le cadre</Text>
+        <Text style={styles.hint}>{t.scanner.hint}</Text>
       </View>
     </View>
   );

@@ -1,8 +1,10 @@
 import { StyleSheet, Text, View } from "react-native";
 
 import { colors } from "@/constants/colors";
+import { reasonText } from "@/i18n/reasons";
 import type { Reason } from "@/services/api";
 import { severityColors } from "@/utils/verdict";
+import { t } from "@/i18n";
 
 interface ReasonListProps {
   reasons: Reason[];
@@ -13,11 +15,11 @@ export default function ReasonList({ reasons }: ReasonListProps) {
 
   return (
     <View style={styles.card}>
-      <Text style={styles.cardLabel}>Ce que nous avons trouvé</Text>
+      <Text style={styles.cardLabel}>{t.report.findings}</Text>
       {reasons.map((reason) => (
         <View key={reason.code} style={styles.row}>
           <View style={[styles.dot, { backgroundColor: severityColors[reason.severity] }]} />
-          <Text style={styles.message}>{reason.message}</Text>
+          <Text style={styles.message}>{reasonText(reason)}</Text>
         </View>
       ))}
     </View>

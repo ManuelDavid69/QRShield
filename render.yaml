@@ -21,6 +21,7 @@ services:
         generateValue: true
       - key: CORS_ORIGINS
         value: https://manueldavid69.github.io
-      # Mesuré en ligne : avec 1, deux clients d'adresses différentes partageaient le même compteur
+      # Mesuré en ligne : avec 1, tous les clients partagent un compteur ; avec 2, l'adresse lue
+      # change à chaque connexion et la limite ne s'applique plus
       - key: TRUSTED_PROXY_HOPS
-        value: "2"
+        value: "3"

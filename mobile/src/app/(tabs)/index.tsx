@@ -43,7 +43,8 @@ export default function ScanScreen() {
 
   return (
     <View style={styles.container}>
-      <StatusBar style="light" />
+      {/* Les onglets restent montés : hors focus, ce réglage s'appliquerait aux autres écrans */}
+      {isFocused ? <StatusBar style="light" /> : null}
       {/* La prop active est ignorée sur Android : la caméra et la lampe restaient allumées en
           arrière-plan. Retirer le composant ferme vraiment la caméra quand l'écran est masqué. */}
       {isFocused ? (

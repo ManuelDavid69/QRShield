@@ -92,7 +92,7 @@ export default function StatsScreen() {
             <View style={[styles.card, styles.half]}>
               <Text style={styles.cardLabel}>QR codes à risque</Text>
               <Text style={[styles.big, stats.flagged_percent > 0 && styles.flagged]}>
-                {`${stats.flagged_percent} %`}
+                {`${String(stats.flagged_percent).replace(".", ",")} %`}
               </Text>
               <Text style={styles.small}>{`${stats.flagged_scans} sur ${stats.total_scans}`}</Text>
             </View>

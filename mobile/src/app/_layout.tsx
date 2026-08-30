@@ -1,4 +1,5 @@
 import { Stack } from "expo-router";
+import { StatusBar } from "expo-status-bar";
 import { View } from "react-native";
 
 import { colors } from "@/constants/colors";
@@ -40,6 +41,8 @@ export default function RootLayout() {
   return (
     <AuthProvider>
       <AlertsProvider>
+        {/* Sans réglage, les icônes suivent le thème du téléphone : blanches sur fond clair en mode sombre */}
+        <StatusBar style="dark" />
         <Navigator />
       </AlertsProvider>
     </AuthProvider>

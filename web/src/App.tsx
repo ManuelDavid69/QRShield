@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
+import dangerScreen from "./assets/screens/danger.png";
 import historyScreen from "./assets/screens/history.png";
 import statsScreen from "./assets/screens/stats.png";
 import suspectScreen from "./assets/screens/suspect.png";
+import AnalysisExample from "./components/AnalysisExample";
 import DataTable from "./components/DataTable";
-import Features from "./components/Features";
-import HowItWorks from "./components/HowItWorks";
 import PhoneShot from "./components/PhoneShot";
 import RankedBars from "./components/RankedBars";
 import WeeklyBars from "./components/WeeklyBars";
@@ -14,6 +14,7 @@ import { fetchStats, fetchZones } from "./services/api";
 import type { CommunityStats, Zone } from "./services/api";
 
 const REPO_URL = "https://github.com/ManuelDavid69/QRShield";
+const README_URL = `${REPO_URL}#readme`;
 
 const EMPTY_ZONES: Zone[] = [];
 
@@ -68,14 +69,14 @@ export default function App() {
         <div className="container header-row">
           <a className="logo" href="#top">
             <svg viewBox="0 0 32 32" aria-hidden="true">
-              <rect width="32" height="32" rx="7" />
+              <rect width="32" height="32" rx="6" />
               <path d="M9 9h6v6H9zM17 9h6v6h-6zM9 17h6v6H9zM18 18h2v2h-2zM21 21h2v2h-2z" />
             </svg>
             QRShield
           </a>
           <nav className="nav-links">
-            <a href="#features">{t.navFeatures}</a>
-            <a href="#how">{t.navHow}</a>
+            <a href="#checks">{t.navChecks}</a>
+            <a href="#example">{t.navExample}</a>
             <a href="#map">{t.navMap}</a>
             <a href="#privacy">{t.navPrivacy}</a>
           </nav>
@@ -92,7 +93,7 @@ export default function App() {
                 </button>
               ))}
             </div>
-            <a className="header-github" href={REPO_URL} target="_blank" rel="noreferrer">
+            <a href={REPO_URL} target="_blank" rel="noreferrer">
               GitHub
             </a>
           </div>
@@ -102,18 +103,16 @@ export default function App() {
       <main id="top">
         <section className="hero">
           <div className="container hero-grid">
-            <div>
+            <div className="hero-text">
               <h1>{t.title}</h1>
               <p className="lead">{t.lead}</p>
-              <div className="actions">
-                <a className="button button-primary" href={REPO_URL} target="_blank" rel="noreferrer">
+              <p className="actions">
+                <a className="button" href={REPO_URL} target="_blank" rel="noreferrer">
                   {t.ctaCode}
                 </a>
-                <a className="button button-secondary" href="#map">
-                  {t.ctaMap}
-                </a>
-              </div>
-              <p className="availability">{t.availability}</p>
+                <a href="#map">{t.ctaMap}</a>
+              </p>
+              <p className="byline">{t.byline}</p>
             </div>
             <div className="hero-phone">
               <PhoneShot src={suspectScreen} alt={t.heroAlt} />
@@ -121,19 +120,30 @@ export default function App() {
           </div>
         </section>
 
-        <section id="features" className="section section-features">
-          <div className="container">
-            <Features />
+        <section id="checks" className="section">
+          <div className="container checks">
+            <div>
+              <h2>{t.checksTitle}</h2>
+              <ul className="prose-list">
+                {t.checks.map((item) => (
+                  <li key={item.title}>
+                    <strong>{item.title}</strong> {item.text}
+                  </li>
+                ))}
+              </ul>
+              <p className="limit">{t.checksLimit}</p>
+            </div>
+            <PhoneShot src={dangerScreen} alt={t.dangerAlt} />
           </div>
         </section>
 
-        <section id="how" className="section section-how">
+        <section id="example" className="section section-alt">
           <div className="container">
-            <HowItWorks />
+            <AnalysisExample />
           </div>
         </section>
 
-        <section className="section section-after">
+        <section className="section">
           <div className="container after">
             <div>
               <h2>{t.afterTitle}</h2>
@@ -144,7 +154,6 @@ export default function App() {
                   </li>
                 ))}
               </ul>
-              <p className="after-note">{t.afterNote}</p>
             </div>
             <div className="fan">
               <PhoneShot src={statsScreen} alt={t.statsAlt} />
@@ -157,40 +166,31 @@ export default function App() {
           <div className="container">
             <h2>{t.mapTitle}</h2>
             <p className="section-intro">{t.mapIntro}</p>
-            {showDemo && <p className="note">{t.demoNote}</p>}
+            {showDemo && <p className="section-intro">{t.demoNote}</p>}
 
             {failed && <p className="state">{t.unavailable}</p>}
             {!failed && !stats && <p className="state">{t.loading}</p>}
 
             {stats && (
               <>
-                <dl className="figures" aria-label={t.figuresLabel}>
-                  <div className="card">
-                    <dt>{t.reports}</dt>
-                    <dd className="figure-value">{formatNumber(stats.total_reports)}</dd>
-                  </div>
-                  <div className="card">
-                    <dt>{t.dangerousLinks}</dt>
-                    <dd className="figure-value">{formatNumber(stats.dangerous_reports)}</dd>
-                  </div>
-                  <div className="card">
-                    <dt>{t.areas}</dt>
-                    <dd className="figure-value">{formatNumber(stats.zones)}</dd>
-                  </div>
-                </dl>
+                <p className="figures">
+                  <span className="figure-value">{formatNumber(stats.total_reports)}</span> {t.reports},{" "}
+                  <span className="figure-value">{formatNumber(stats.dangerous_reports)}</span>{" "}
+                  {t.dangerousLinks}, <span className="figure-value">{formatNumber(stats.zones)}</span>{" "}
+                  {t.areas}. {t.period(stats.period_days)}
+                </p>
 
                 <ZoneMap zones={zones} />
                 <DataTable zones={zones} />
 
                 <div className="charts">
-                  <div className="card">
+                  <div>
                     <h3>{t.perWeek}</h3>
                     <WeeklyBars weekly={stats.weekly} />
                   </div>
-                  <div className="card">
+                  <div>
                     <h3>{t.threatType}</h3>
                     <RankedBars rows={threatRows} unit={t.reports} />
-                    <p className="period">{t.period(stats.period_days)}</p>
                   </div>
                 </div>
               </>
@@ -213,12 +213,31 @@ export default function App() {
             </ul>
           </div>
         </section>
+
+        <section className="section section-alt">
+          <div className="container tech">
+            <h2>{t.techTitle}</h2>
+            {t.tech.map((paragraph) => (
+              <p key={paragraph}>{paragraph}</p>
+            ))}
+            <p>
+              <a href={README_URL} target="_blank" rel="noreferrer">
+                {t.techLink}
+              </a>
+            </p>
+          </div>
+        </section>
       </main>
 
       <footer className="footer">
         <div className="container footer-row">
           <p>{t.footer}</p>
-          <p>FastAPI · PostgreSQL + PostGIS · React Native · React · Docker</p>
+          <p>
+            <a href={REPO_URL} target="_blank" rel="noreferrer">
+              GitHub
+            </a>{" "}
+            · {t.license}
+          </p>
         </div>
       </footer>
     </>

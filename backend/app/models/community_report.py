@@ -40,3 +40,7 @@ class CommunityReport(Base):
     reported_on: Mapped[date] = mapped_column(Date, server_default=func.current_date(), nullable=False, index=True)
     # HMAC propre à chaque URL : empêche les doublons sans permettre de relier deux signalements
     reporter_hash: Mapped[str] = mapped_column(String(64), unique=True, nullable=False)
+    # HMAC par maille et par domaine : comptent les personnes avant de publier. Vides sur les
+    # anciens signalements, qui ne comptent donc plus pour ce seuil
+    zone_reporter_hash: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    domain_reporter_hash: Mapped[str | None] = mapped_column(String(64), nullable=True)

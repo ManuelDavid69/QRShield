@@ -23,8 +23,9 @@ from app.services.analysis.signals import Severity, Signal
 
 # 0,01 degré fait environ 1,1 km en latitude et 0,8 km en longitude à la latitude de la France
 GRID_DEGREES = 0.01
-# Une zone avec un seul signalement désignerait le passage d'une seule personne
-MIN_REPORTS_PER_ZONE = 2
+# Compte des personnes et non des signalements : deux scans du même utilisateur au même
+# endroit suffiraient sinon à publier son passage
+MIN_PEOPLE_PER_ZONE = 2
 PERIOD_DAYS = 90
 TOP_LIMIT = 5
 MAX_ZONES = 1000
@@ -46,6 +47,16 @@ def reporter_hash(user_id: uuid.UUID, analysis_id: uuid.UUID, source: ReportSour
     """
     key = get_settings().community_secret.encode("utf-8")
     message = f"{user_id}:{analysis_id}:{source.value}".encode("utf-8")
+    return hmac.new(key, message, hashlib.sha256).hexdigest()
+
+
+def scope_hash(user_id: uuid.UUID, scope: str) -> str:
+    """Identique pour une même personne dans une même maille ou un même domaine.
+
+    Sert uniquement à compter les personnes distinctes avant de publier une zone ou un domaine.
+    """
+    key = get_settings().community_secret.encode("utf-8")
+    message = f"{user_id}:{scope}".encode("utf-8")
     return hmac.new(key, message, hashlib.sha256).hexdigest()
 
 
@@ -91,6 +102,8 @@ def _insert_report(
             source=source,
             area=area,
             reporter_hash=reporter_hash(user_id, analysis.id, source),
+            zone_reporter_hash=scope_hash(user_id, f"zone:{area.data}") if area is not None else None,
+            domain_reporter_hash=scope_hash(user_id, f"domain:{analysis.domain}"),
         )
         .on_conflict_do_nothing(index_elements=["reporter_hash"])
     )
@@ -189,7 +202,7 @@ _ZONES_SQL = text("""
     FROM community_reports
     WHERE area IS NOT NULL AND reported_on >= :since
     GROUP BY area
-    HAVING count(*) >= :min_reports
+    HAVING count(DISTINCT zone_reporter_hash) >= :min_people
     ORDER BY reports DESC
     LIMIT :limit
 """)
@@ -198,7 +211,7 @@ _ZONES_SQL = text("""
 def _zones(db: Session, limit: int, days: int = PERIOD_DAYS) -> list[ZoneOut]:
     rows = db.execute(
         _ZONES_SQL,
-        {"since": _period_start(days), "min_reports": MIN_REPORTS_PER_ZONE, "limit": limit},
+        {"since": _period_start(days), "min_people": MIN_PEOPLE_PER_ZONE, "limit": limit},
     ).all()
     return [
         ZoneOut(latitude=r.latitude, longitude=r.longitude, reports=r.reports, dangerous=r.dangerous)
@@ -231,12 +244,12 @@ def public_stats(db: Session) -> CommunityStats:
     week = func.date_trunc("week", CommunityReport.reported_on)
     weekly = db.execute(select(week, func.count()).where(recent).group_by(week).order_by(week)).all()
 
-    # Même règle que pour les zones : un domaine vu une seule fois n'est pas publié
+    # Même règle que pour les zones : un domaine vu par une seule personne n'est pas publié
     domains = db.execute(
         select(CommunityReport.domain, func.count())
         .where(recent)
         .group_by(CommunityReport.domain)
-        .having(func.count() >= MIN_REPORTS_PER_ZONE)
+        .having(func.count(CommunityReport.domain_reporter_hash.distinct()) >= MIN_PEOPLE_PER_ZONE)
         .order_by(func.count().desc(), CommunityReport.domain)
         .limit(TOP_LIMIT)
     ).all()

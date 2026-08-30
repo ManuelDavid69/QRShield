@@ -84,6 +84,9 @@ def seed(db) -> int:
                 area=area,
                 reported_on=today - timedelta(days=rng.randint(0, 80)),
                 reporter_hash=uuid.uuid4().hex,
+                # Chaque ligne fictive joue une personne différente
+                zone_reporter_hash=uuid.uuid4().hex,
+                domain_reporter_hash=uuid.uuid4().hex,
             ))
             total += 1
     return total

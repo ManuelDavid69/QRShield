@@ -188,6 +188,38 @@ def test_zones_masque_un_signalement_unique(api, auth_headers):
     assert r.json()["zones"] == []
 
 
+def test_zones_une_seule_personne_reste_masquee_meme_avec_deux_liens(api, auth_headers):
+    # Le bug vu en production : deux scans du même compte publiaient sa position
+    headers = auth_headers()
+    _scan(api, headers, PHISHING_URL, lat=LYON[0], lon=LYON[1])
+    _scan(api, headers, PHISHING_URL_2, lat=LYON[0], lon=LYON[1])
+    assert api.get("/community/zones").json()["zones"] == []
+    assert api.get("/community/stats").json()["zones"] == 0
+
+
+def test_zones_compte_les_personnes_pas_les_signalements(api, auth_headers):
+    alice = auth_headers("alice@test.fr")
+    bob = auth_headers("bob@test.fr")
+    _scan(api, alice, PHISHING_URL, lat=LYON[0], lon=LYON[1])
+    _scan(api, alice, PHISHING_URL_2, lat=LYON[0], lon=LYON[1])
+    _scan(api, bob, PHISHING_URL, lat=LYON[0], lon=LYON[1])
+    zones = api.get("/community/zones").json()["zones"]
+    assert len(zones) == 1
+    assert zones[0]["reports"] == 3
+
+
+def test_zones_ignore_les_anciens_signalements_sans_empreinte(api, auth_headers, db_session_factory):
+    headers = auth_headers("alice@test.fr")
+    other = auth_headers("bob@test.fr")
+    _scan(api, headers, PHISHING_URL, lat=LYON[0], lon=LYON[1])
+    _scan(api, other, PHISHING_URL, lat=LYON[0], lon=LYON[1])
+    with db_session_factory() as session:
+        for report in session.scalars(select(CommunityReport)):
+            report.zone_reporter_hash = None
+        session.commit()
+    assert api.get("/community/zones").json()["zones"] == []
+
+
 def test_zones_deux_personnes_meme_maille(api, auth_headers):
     alice = auth_headers("alice@test.fr")
     bob = auth_headers("bob@test.fr")
@@ -224,7 +256,7 @@ def test_reponses_publiques_sans_donnees_identifiantes(api, auth_headers):
     for path in ("/community/zones", "/community/stats"):
         r = api.get(path)
         assert r.status_code == 200
-        for forbidden in ("user_id", "reporter_hash", "email"):
+        for forbidden in ("user_id", "reporter_hash", "email", "zone_reporter_hash", "domain_reporter_hash"):
             assert forbidden not in r.text
 
 
@@ -275,6 +307,15 @@ def test_stats_exclut_le_domaine_vu_une_seule_fois(api, auth_headers):
     body = api.get("/community/stats").json()
     assert body["total_reports"] == 3
     assert body["top_domains"] == [{"domain": "paypa1-securite.top", "reports": 2}]
+
+
+def test_stats_masque_le_domaine_dune_seule_personne(api, auth_headers):
+    headers = auth_headers()
+    _scan(api, headers, PHISHING_URL)
+    _scan(api, headers, PHISHING_URL_2)
+    body = api.get("/community/stats").json()
+    assert body["total_reports"] == 2
+    assert body["top_domains"] == []
 
 
 def test_stats_base_vide(api):

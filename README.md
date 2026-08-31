@@ -4,13 +4,13 @@
 
 Mobile application that analyzes the content of a QR code before opening it.
 
-**[See the demo page](https://manueldavid69.github.io/QRShield/)** (map and statistics, with fictional data)
+**[See the demo page](https://manueldavid69.github.io/QRShield/)** (map and statistics, with fictional data) · **[Download the Android APK](https://github.com/ManuelDavid69/QRShield/releases/latest)**
 
 I am a fourth-year engineering student in Computer Science and Networks (IRC) at CPE Lyon. I wanted a personal project focused on cybersecurity that addressed a concrete problem. QR codes are everywhere today: restaurant menus, parking meters, posters, payment terminals. People scan them by reflex, without checking where they lead. Yet all it takes is placing a fake QR code over the one on a parking meter to redirect people to a fraudulent payment page. This technique, called *quishing*, has already claimed several victims in France.
 
 QRShield scans the QR code, follows the link to its real destination, and indicates whether it looks safe, suspicious, or dangerous, explaining why. The user then decides whether to open the link or not.
 
-> The whole project runs locally, from the app to the server. Only the demo page is online for now. The current status is detailed below.
+> The API is hosted on Render with a Neon database, and the Android app can be installed from the APK above. It is not on the Play Store. On first launch, the server may take about a minute to wake up. The current status is detailed below.
 
 ## Features
 

@@ -38,7 +38,7 @@ cp .env.example .env
 docker compose up --build
 ```
 
-Avant le premier lancement, il faut modifier dans `.env` le mot de passe de la base et renseigner `JWT_SECRET_KEY` (la commande pour générer une clé est indiquée dans le fichier).
+Avant le premier lancement, il faut modifier dans `.env` le mot de passe de la base et renseigner `JWT_SECRET_KEY` (la commande pour générer une clé est indiquée dans le fichier). Les clés `GOOGLE_SAFE_BROWSING_API_KEY` et `VIRUSTOTAL_API_KEY` sont facultatives : sans elles, l'analyse fonctionne mais se limite aux redirections, aux indices dans l'adresse et à l'âge du domaine.
 
 L'API est ensuite disponible sur http://localhost:8000. La documentation Swagger se trouve sur http://localhost:8000/docs et la route `GET /health` indique si la base de données répond. Les migrations Alembic sont appliquées automatiquement au démarrage du conteneur.
 
@@ -100,7 +100,48 @@ La documentation complète est disponible sur `/docs`. Routes actuelles :
 | GET | `/scans` | Historique paginé |
 | GET / DELETE | `/scans/{id}` | Consulter ou supprimer un scan |
 
-Le type de contenu (lien, Wi-Fi, e-mail, téléphone, contact...) est détecté par le serveur. L'analyse de sécurité des liens fera l'objet de la phase suivante ; en attendant, le verdict renvoyé est `unknown`.
+Le type de contenu (lien, Wi-Fi, e-mail, téléphone, contact...) est détecté par le serveur. Pour un lien, la réponse de `POST /scans` contient aussi le résultat de l'analyse de sécurité : verdict, score, URL finale, chaîne de redirections et liste des raisons.
+
+## Analyse de sécurité
+
+Lorsqu'un lien est scanné, le serveur l'analyse en quatre étapes.
+
+**1. Suivi des redirections.** Le serveur suit le lien jusqu'à sa destination finale, sans jamais télécharger le contenu des pages : seuls les en-têtes HTTP sont lus. C'est ce qui permet de voir où mène réellement un lien raccourci (`bit.ly`, `qrco.de`...) ou une chaîne de redirections.
+
+**2. Indices dans l'adresse.** Plusieurs techniques d'arnaque se voient directement dans l'URL :
+
+| Technique | Exemple | Ce qui est détecté |
+|---|---|---|
+| Faute de frappe volontaire | `netfIix.com`, `chronoposte.fr` | distance d'édition avec le nom d'une marque |
+| Lettres remplacées par des chiffres | `paypa1.com`, `amaz0n-livraison.fr` | comparaison après remplacement des caractères ressemblants |
+| Nom de marque dans un autre domaine | `paypal-securite-compte.com`, `impots-gouv-remboursement.fr` | présence du nom d'une marque hors de ses domaines officiels |
+| Marque placée en sous-domaine | `paypal.com.verification-client.ru` | le vrai domaine est `verification-client.ru` |
+| Homographe | `аpple.com` avec un « а » cyrillique | décodage du punycode et conversion des lettres d'autres alphabets |
+| Astuce du `@` | `https://www.paypal.com@evil.com` | le navigateur ignore tout ce qui précède le `@` |
+| Téléchargement direct | `.apk`, `.exe`, `.msi`... | extension du fichier et type MIME renvoyé par le serveur |
+| Adresse IP, extension douteuse, pas de HTTPS | `http://45.13.22.8/`, `.top`, `.xyz` | indices plus faibles |
+
+La liste des marques surveillées se concentre sur celles qui sont le plus souvent imitées en France : banques, administrations (Ameli, impots.gouv), transporteurs, et applications de stationnement, puisque les faux QR codes collés sur les horodateurs sont l'exemple le plus courant de *quishing*.
+
+**3. Services externes.** Google Safe Browsing et VirusTotal indiquent si le lien est déjà connu comme malveillant. L'âge du domaine est obtenu par le protocole RDAP (le successeur de WHOIS) : un site d'arnaque a souvent quelques jours seulement, car il est fermé rapidement. Ces trois vérifications sont lancées en parallèle. Je ne soumets jamais une URL à VirusTotal, je me contente de consulter ses résultats : une URL soumise devient publique, et celle d'un QR code peut contenir des informations personnelles.
+
+**4. Score.** Chaque indice a une gravité, et donc un poids : faible (10), moyen (25), élevé (45), critique (80). Les poids s'additionnent, dans la limite de 100. En dessous de 30, le lien est considéré comme sûr ; de 30 à 59, il est suspect ; à partir de 60, il est dangereux. Un seul indice élevé rend donc un lien suspect, deux le rendent dangereux, et un signalement par Safe Browsing ou par au moins trois antivirus suffit à le classer dangereux. Chaque indice est accompagné d'une phrase d'explication affichée à l'utilisateur.
+
+Le résultat d'une analyse est partagé entre tous les utilisateurs et réutilisé pendant 24 heures. Une même URL scannée par beaucoup de monde n'est donc analysée qu'une fois par jour, ce qui ménage aussi le quota de VirusTotal (4 requêtes par minute en version gratuite).
+
+### Protection du serveur (SSRF)
+
+Suivre des liens choisis par n'importe qui présente un risque pour le serveur lui-même. Un QR code contenant `http://169.254.169.254/` ou `http://localhost:5432` pourrait amener l'API à interroger ses propres services internes : c'est une attaque SSRF (*Server-Side Request Forgery*). Pour l'éviter, à chaque étape de redirection :
+
+- je résous moi-même le nom de domaine et je refuse toute adresse qui n'est pas publique (réseau local, boucle locale, adresses réservées, multicast, IPv6 privée ou IPv4 encapsulée dans de l'IPv6) ;
+- je me connecte ensuite directement à l'adresse IP vérifiée, et non au nom de domaine. Sinon, un serveur DNS malveillant pourrait répondre une adresse publique lors de la vérification, puis une adresse interne lors de la connexion (*DNS rebinding*). Le certificat TLS reste vérifié pour le vrai nom de domaine grâce au SNI ;
+- les identifiants éventuellement présents dans l'URL ne sont jamais transmis, et le nombre de redirections comme la durée totale sont limités.
+
+### Limites connues
+
+- Les heuristiques peuvent produire des faux positifs : `amazonia-voyages.fr` est jugé suspect parce qu'il contient « amazon ». Pour les noms de marque qui sont aussi des mots courants (Orange, Free, Apple...), seule une correspondance exacte est prise en compte, avec une gravité réduite.
+- Seules les redirections HTTP sont suivies. Une page qui redirige en JavaScript ou avec une balise `<meta refresh>` n'est pas encore analysée.
+- Avec l'API Lookup de Safe Browsing, l'URL complète est envoyée à Google. L'API Update, qui ne transmet qu'un préfixe du hash de l'URL, préserverait mieux la vie privée ; c'est une amélioration que je prévois.
 
 ## Modèle de données
 
@@ -160,8 +201,9 @@ web/               page web publique React (à venir)
 - [x] Mise en place du projet (Docker Compose, structure, configuration, route `/health`)
 - [x] Modèle de données, migrations, comptes utilisateurs et historique des scans
 - [x] Écran de scan sur mobile et affichage du contenu
-- [ ] Analyse de sécurité (Safe Browsing, VirusTotal, redirections, typosquatting)
-- [ ] Algorithme de scoring
+- [x] Analyse de sécurité côté serveur (redirections, typosquatting, Safe Browsing, VirusTotal, âge du domaine)
+- [x] Algorithme de scoring
+- [ ] Affichage du résultat de l'analyse dans l'application (connexion au backend)
 - [ ] Historique et statistiques personnelles dans l'application
 - [ ] Carte communautaire (application et page web publique)
 - [ ] Notifications

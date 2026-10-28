@@ -11,8 +11,8 @@ QRShield scanne le QR code, suit le lien jusqu'à sa destination réelle et indi
 ## Fonctionnalités prévues
 
 - **Analyse de sécurité** : URL finale après les redirections, réputation du domaine (Google Safe Browsing, VirusTotal, PhishTank), détection du typosquatting (`paypa1.com`, `amaz0n-secure.fr`...), repérage des liens qui téléchargent directement un `.apk` ou un `.exe`, et score final sûr / suspect / dangereux.
-- **Historique et statistiques** : chaque scan est enregistré et un tableau de bord présente les habitudes de l'utilisateur (scans par semaine, part de QR codes suspects, types de liens, lieux de scan).
-- **Volet communautaire** : les QR codes jugés dangereux sont remontés de façon anonymisée et affichés sur une carte, sur le principe de Waze. Ces signalements servent aussi à affiner le score.
+- **Historique et statistiques** : chaque scan est enregistré, et un écran de l'application présente les habitudes de l'utilisateur (scans par semaine, part de QR codes suspects, types de liens, lieux de scan).
+- **Volet communautaire** : les QR codes jugés dangereux sont remontés de façon anonymisée et affichés sur une carte, sur le principe de Waze. Ces signalements servent aussi à affiner le score. La carte est disponible dans l'application et sur une page web publique, accompagnée de statistiques globales.
 - **Alertes** : notification si un QR code déjà scanné est reclassé comme dangereux, ou si de nombreux signalements apparaissent à proximité.
 
 ## Choix techniques
@@ -22,8 +22,12 @@ QRShield scanne le QR code, suit le lien jusqu'à sa destination réelle et indi
 | Backend | Python, FastAPI, SQLAlchemy, Alembic | Python est le langage le plus utilisé en cybersécurité et dispose de nombreuses bibliothèques pour analyser des URLs. FastAPI est léger et génère automatiquement la documentation Swagger. |
 | Base de données | PostgreSQL et PostGIS | J'utilise déjà PostgreSQL en cours et en alternance. PostGIS permet de faire les requêtes géographiques nécessaires à la carte. |
 | Mobile | React Native (Expo) et TypeScript | Une seule base de code pour Android et iOS. Venant de Java et d'Android natif, c'était aussi l'occasion d'apprendre React. |
-| Tableau de bord web | React, TypeScript, Recharts, Leaflet | Même écosystème que l'application mobile. |
+| Page web publique | React, TypeScript, Recharts, Leaflet | Même écosystème que l'application mobile. |
 | Infrastructure | Docker Compose | Lancer la base de données et l'API avec une seule commande. |
+
+J'ai hésité pour la partie mobile avec Kotlin Multiplatform, qui aurait prolongé mon expérience d'Android natif. Je développe cependant sous Windows, et compiler puis tester la version iOS d'une application KMP nécessite un Mac. Avec Expo, je peux tester l'application sur Android comme sur iPhone, et je garde le même langage que pour la page web.
+
+Toutes les fonctionnalités destinées à l'utilisateur (scan, historique, statistiques, carte) sont regroupées dans l'application mobile. La partie web se limite à une page publique, sans compte, qui présente la carte communautaire et des statistiques globales anonymisées. Elle permet de voir ce que produit le projet sans avoir à installer l'application.
 
 ## Installation
 
@@ -148,7 +152,7 @@ mobile/
     app/           écrans (expo-router : un fichier = une route)
     components/    composants réutilisables
     utils/         lecture du contenu des QR codes
-dashboard/         tableau de bord web React (à venir)
+web/               page web publique React (à venir)
 ```
 
 ## Avancement
@@ -158,6 +162,6 @@ dashboard/         tableau de bord web React (à venir)
 - [x] Écran de scan sur mobile et affichage du contenu
 - [ ] Analyse de sécurité (Safe Browsing, VirusTotal, redirections, typosquatting)
 - [ ] Algorithme de scoring
-- [ ] Historique et statistiques
-- [ ] Carte communautaire
+- [ ] Historique et statistiques personnelles dans l'application
+- [ ] Carte communautaire (application et page web publique)
 - [ ] Notifications

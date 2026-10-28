@@ -5,12 +5,14 @@ from geoalchemy2.elements import WKTElement
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
+from app.config import get_settings
 from app.database import get_db
 from app.models import Scan, User
 from app.schemas.scan import ScanCreate, ScanList, ScanOut, scan_to_out
 from app.security.dependencies import get_current_user
 from app.services.content_parser import parse_qr_content
-from app.services.url_analyses import get_or_create_analysis
+from app.services.qr_analyzer import UrlAnalyzer, get_url_analyzer
+from app.services.url_analyses import get_or_create_analysis, refresh_analysis
 
 router = APIRouter(prefix="/scans", tags=["scans"])
 
@@ -28,6 +30,7 @@ def create_scan(
     body: ScanCreate,
     db: Session = Depends(get_db),
     current: User = Depends(get_current_user),
+    analyzer: UrlAnalyzer = Depends(get_url_analyzer),
 ) -> ScanOut:
     parsed = parse_qr_content(body.content)
 
@@ -40,6 +43,7 @@ def create_scan(
     )
     if parsed.url is not None:
         scan.analysis = get_or_create_analysis(db, parsed.url)
+        refresh_analysis(db, scan.analysis, analyzer, get_settings().analysis_ttl_hours)
     if body.latitude is not None and body.longitude is not None:
         # WKT : longitude en premier (x, y)
         scan.location = WKTElement(f"POINT({body.longitude} {body.latitude})", srid=4326)

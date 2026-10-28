@@ -9,6 +9,10 @@ class Settings(BaseSettings):
     cors_origins: str = "http://localhost:5173"
     google_safe_browsing_api_key: str = ""
     virustotal_api_key: str = ""
+    # interroge rdap.org pour connaître l'âge du domaine (pas besoin de clé)
+    domain_age_check: bool = True
+    # une analyse plus vieille que ça est refaite au prochain scan de la même URL
+    analysis_ttl_hours: int = 24
     app_name: str = "QRShield API"
 
     # 32 caractères minimum, sinon une clé HS256 se bruteforce trop facilement
